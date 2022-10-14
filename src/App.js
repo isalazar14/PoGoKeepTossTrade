@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 // import axios from "axios";
-import { Router } from "@reach/router";
+import { Router, Link } from "@reach/router";
 import Context from "./context/Context";
 import CSVDragDrop from "./components/CSVDragDrop";
 import CSVResults from "./components/CSVResults";
@@ -8,26 +8,17 @@ import Papa from "papaparse";
 import "./App.css";
 import "./data/pokemon.csv";
 
-
 function App() {
   const [pokeListState, setPokeListState] = useState([]);
   const [fieldState, setFieldState] = useState({});
   const [pokeDB, setPokeDB] = useState();
-  // const [csvData, setCsvData] = useState();
 
-  // useEffect(() => {
-  //   Papa.parse("./data/pokemon.csv", {
-  //     download: true,
-  //     complete: (data) => {
-  //       console.log(data);
-  //       // setCsvData(data.data);
-  //     },
-  //   });
-  // }, []);
+  // const [csvData, setCsvData] = useState();
 
   return (
     <div className="App">
-      <h1>Ready</h1>
+      <Link to="/">Home</Link>
+      
       {/* <FileUploadForm /> */}
       <Context.Provider
         value={{
@@ -39,8 +30,7 @@ function App() {
           setPokeDB,
         }}
       >
-        
-        {/* <Router>
+        <Router>
           <CSVDragDrop
             path={"/"}
             // pokeListState={pokeListState}
@@ -49,8 +39,11 @@ function App() {
             // setFieldState={setFieldState}
           />
           <CSVResults path={"results"} />
-        </Router> */}
+        </Router>
       </Context.Provider>
+      {/* <div className="spinner-border" role="status">
+        <span className="visually-hidden"></span>
+      </div> */}
     </div>
   );
 }

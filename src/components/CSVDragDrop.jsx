@@ -2,13 +2,24 @@ import React, { useContext } from "react";
 import { CSVReader } from "react-papaparse";
 import { navigate } from "@reach/router";
 import Context from "../context/Context";
+import DbWorker from "workerize-loader!../util/dbWorker.js"; // eslint-disable-line import/no-webpack-loader-syntax
 
 const CVSDragDrop = () => {
   const { setPokeListState, setFieldState } = useContext(Context);
+  const db = new DbWorker();
+  
+  const cleanHeaders = (header) => {
+    // console.log(header);
+    // const cleanHeader = header.toLowerCase().split(" ").join("_").trim().replace();
+    const cleanHeader = header.toLowerCase().replace(/\s/g,"_").replace(/\((.)\)/g,"$1l");
+    console.log(cleanHeader);
+    return cleanHeader
+  }
   const handleOnDrop = (data) => {
     console.log("---------------------------");
     console.log("File dropped in");
     console.log(data);
+    
     // extract headers from first row, replace spaces with underscores, trim trailing whitespace;
     let headersArr = data[0].meta.fields.map((field) =>
       field.split(" ").join("_").trim()
@@ -33,10 +44,10 @@ const CVSDragDrop = () => {
     // dataRows.forEach((row)=>dataArr.push(Object.keys(row).map(key=>row[key])))
     dataRows.forEach((row)=>dataArr.push(Object.values(row)))
     let objToArrEnd = console.timeEnd("objToArr")
-    console.log(objToArrEnd - objToArrStart);
-    console.log(headersArr)
-    console.log(headersObj)
-    console.log(dataArr)
+    console.log("time to convert data obj to arr", objToArrEnd - objToArrStart);
+    console.log("headers array", headersArr)
+    console.log("headers object", headersObj)
+    console.log("data array", dataArr)
     // save array of pokemon data to pokelist state
     setPokeListState(dataRows);
     console.log("---------------------------");
@@ -44,7 +55,7 @@ const CVSDragDrop = () => {
   };
 
   const handleOnError = (err, file, inputElem, reason) => {
-    console.log(err);
+    console.error(err);
   };
 
   const handleOnRemoveFile = (data) => {
@@ -53,23 +64,33 @@ const CVSDragDrop = () => {
     console.log(data);
     console.log("---------------------------");
   };
+  
+  
+  const handleOnFileLoad = (data) => {
+    console.log("---------------------------");
+    console.log("File loaded");
+    console.log(data);
+    db.saveUserData(data)
+    // setPokeListState(data);
+    console.log("---------------------------");
+  };
+  const handleComplete = (results) => {
+    console.log(results);
+  }
 
-  // const handleOnFileLoad = (data) => {
-  //   console.log("---------------------------");
-  //   console.log("File loaded");
-  //   // console.log(data);
-  //   setPokeListState(data);
-  //   console.log("---------------------------");
-  // };
 
   return (
     <CSVReader
-      onDrop={handleOnDrop}
+      // onDrop={handleOnDrop}
+      onFileLoad={handleOnFileLoad}
       onError={handleOnError}
       addRemoveButton
       onRemoveFile={handleOnRemoveFile}
-      // onFileLoad={handleOnFileLoad}
-      config={{ header: true, dynamicTyping: true }}
+      config={{ header: true, dynamicTyping: true, skipEmptyLines: true, 
+        // worker: true,
+        transformHeader: cleanHeaders,
+        // complete: handleOnFileLoad
+      }}
     >
       <span>Drop CSV file here or click to upload.</span>
     </CSVReader>
