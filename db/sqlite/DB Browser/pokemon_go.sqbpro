@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="C:\Users\Ismel\Google Drive\Coding\Projects\pokemon_go_evaluator\db\sqlite\pokemon_go.db" readonly="0" foreign_keys="0" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="31534"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,30:maincalcRankStats_byLeagueMaxLevel"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="calcRankStats_byLeagueMaxLevel" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="149"/><column index="2" value="40"/><column index="3" value="40"/><column index="4" value="64"/><column index="5" value="68"/><column index="6" value="50"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="currentRankStats" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="40"/><column index="2" value="40"/><column index="3" value="70"/><column index="4" value="72"/><column index="5" value="40"/><column index="6" value="40"/><column index="7" value="40"/><column index="8" value="59"/><column index="9" value="40"/><column index="10" value="46"/><column index="11" value="56"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="evo_cost_seqs" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="118"/><column index="2" value="137"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="evo_costs" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="118"/><column index="2" value="70"/><column index="3" value="115"/><column index="4" value="121"/><column index="5" value="118"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="evo_criteria" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="74"/><column index="2" value="98"/><column index="3" value="139"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="evo_stages" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="64"/><column index="2" value="88"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="families" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="65"/><column index="2" value="89"/><column index="3" value="110"/><column index="4" value="95"/><column index="5" value="118"/><column index="6" value="119"/><column index="7" value="129"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="leagues" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="70"/><column index="2" value="94"/><column index="3" value="57"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="sql1.sql">-- drop table if exists currentRankStats;
+-- create table currentRankStats as 
+-- 	select * from pvp_rank_stats_tabular;
+
+-- for testing
+drop view if exists calcRankStats_byLeagueMaxLevel;
+create view `calcRankStats_byLeagueMaxLevel` as
+select 
+1 as pokemon_form_count,
+1 as p_id,
+1 as f_id,
+'' as leagueId,
+1 as maxLevel,
+0 as ivFloor
+-- (select multiplier from levels where level = min(maxLevel, 51)) as maxLevelCpm,
+-- (select cp_limit from leagues where league_id = leagueId) + 0.9999999 as cpLimit
+;
+
+-- select * from calcRankStats_byLeagueMaxLevel;
+
+drop trigger if exists calcRankStats_byLeagueMaxLevel_insert;
+create TRIGGER calcRankStats_byLeagueMaxLevel_insert INSTEAD OF INSERT ON calcRankStats_byLeagueMaxLevel
+BEGIN
+-- only needed if using filteredLevels to get max true cpm
+-- drop temporary table if exists filteredLevels;
+-- create temporary table filteredLevels like levels;
+-- insert into filteredLevels select * from levels where level &lt;= new.maxLevel order by level desc;
+
+-- this was for inserting directly into destination table, instead of just selecting result set
+-- insert into pvp_rank_stats_tabular
+-- -- (
+-- -- -- 		pf_id
+-- -- --   , gl_rank, `gl_rank_%`, gl_sp, `gl_sp_%`, gl_level, gl_cp, gl_hp
+-- -- --   , ul_rank, `ul_rank_%`, ul_sp, `ul_sp_%`, ul_level, ul_cp, ul_hp
+-- -- 		-- -------
+-- --       p_id, f_id, league_id, max_level
+-- -- 		, iv_id
+-- -- 		, level, cp
+-- --     , `rank_%`, `rank`
+-- --     , `sp_%`, sp
+-- --  )
+
+-- drop temporary table if exists leagueLevelRankStats;
+-- PRAGMA temp_store = 2;
+-- create temporary table leagueLevelRankStats AS
+-- ( index idx_full (pf_id, sp , atk , hp , cp , sta_iv )
+-- , index idx_pf_sp (pf_id, sp))
+-- engine = memory
+
+insert into currentRankStats
+-- explain format = json
+WITH
+pf_selection as (
+	select *
+  from pokemon_forms
+  where p_id = new.p_id and f_id = new.f_id  -- comment out to run calculations for all pokemon
+  -- where pf_id &lt;= new.pokemon_form_count
+  -- where (p_id, f_id, new.leagueId, new.maxLevel) not in (select p_id, f_id, league_id, max_level from pvp_rank_stats_tabular)
+)
+, ivsAboveFloor as ( -- technically 
+	select * 
+	from ivs
+	where atk_iv &gt;= new.ivFloor and def_iv &gt;= new.ivFloor and sta_iv &gt;= new.ivFloor
+)
+, calcultedCpmLimits as (
+  select 	*
+				-- p_id, f_id, iv_id
+				-- , base_atk, base_def, base_sta
+				, (base_atk + atk_iv) as tAtk
+				, (base_def + def_iv) as tDef
+				, (base_sta + sta_iv) as tSta
+				-- , sqrt((new.cpLimit) * 10 / ( (base_atk + atk_iv) * SQRT((base_def + def_iv) * (base_sta + sta_iv)) )) as cpmLimit
+        , ( select multiplier from levels 
+						where multiplier &lt;= sqrt(((select cp_limit from leagues where league_id = new.leagueId) + 0.9999999) * 10 / ( (base_atk + atk_iv) * SQRT((base_def + def_iv) * (base_sta + sta_iv)) )) -- calcCpLimit 
+            order by multiplier desc limit 1
+					) as multiplier
+				-- , sta_iv -- for rank tie-breaking
+	from pf_selection pf
+  -- cross join ivs
+  cross join ivsAboveFloor
+)
+, trueMaxCPMsWithLevelStats as ( -- look level for each iv_id by finding multiplier closest to calculated cpm new. 1500cp and 2500cp [join on (multiplier &lt;= calculated cpm limit 1)]; calculate cp
+	select
+			r.*
+		, l.level
+    -- , l.multiplier
+-- 		pf_id
+--     , iv_id
+--     , iv_str
+--     , sta_iv -- needed for ranking later
+--     -- , atk, def -- base + iv stats
+--     , sta -- need it for CP calc (i.e. NOT sta * multiplier)
+--     -- , cpmLimit -- for debugging level and cp results
+    , max( 10, FLOOR(( (tAtk) * SQRT(tDef * tSta) * POWER(l.multiplier, 2) )/10 ) ) AS cp -- NEED FLOOR!!
+    , tAtk * l.multiplier as ATK -- needed for ranking later
+-- 		, def * multiplier as DEF
+    , floor(tSta * l.multiplier) as hp -- needed for ranking later
+    , round((tAtk * l.multiplier) * (tDef * l.multiplier) * floor(tSta * l.multiplier)) as sp
+--     , level as level
+--     , multiplier as multiplier
+--     , dust_cost, candy_cost, total_dust, total_candy
+	from calcultedCpmLimits r
+	inner join levels l on (l.multiplier = 
+		-- applying max level via filteredLevels temp table; a bit faster than line below
+			-- select 100 pf -&gt; 36.5 sec duration, 1.6 sec fetch
+      -- select 100 pf into memory table -&gt; 36.5 sec duration
+		-- iif(new.leagueId = 'M', new.maxLevelCpm, (select multiplier from filteredLevels fl where fl.multiplier &lt;= r.cpmLimit order by fl.multiplier desc limit 1))
+		-- applying max level via min of [new.maxLevelCpm] or [true cpm] (found in place) 
+			-- select 100 pf -&gt; 27.2 sec duration, 1.6 sec fetch
+		-- min((select multiplier from levels where multiplier &lt;= r.cpmLimit order by multiplier desc limit 1), new.maxLevelCpm)
+    -- applying max level via min of [new.maxLevelCpm] or [true cpm] (from trueMaxCpms above) 
+			-- select 100 pf -&gt; 16.15 sec duration / 1.6 sec fetch
+      -- select 100 pf into memory table -&gt; 29.3 sec duration
+		iif(new.leagueId = 'M', (select multiplier from levels where level = min(new.maxLevel, 51)), min(r.multiplier, (select multiplier from levels where level = min(new.maxLevel, 51))))
+	)
+)
+, rankings as (
+  select *
+		-- pf_id, iv_id, level, cp, sp -- , hp
+		, cast(rank () over(pokeForm order by sp desc, ATK desc, hp desc, cp desc, sta_iv desc) as signed) as `rank`
+		, max(sp) over(pokeForm) as max_sp
+    from trueMaxCPMsWithLevelStats -- 37.000 sec / 5.938 sec
+														-- 36.938 sec / 6.125 sec
+		-- from leagueLevelRankStats 
+    window pokeForm as (partition by pf_id)
+    -- order by `rank`
+)
+, rankStats as (
+	select *
+			-- pf_id, iv_id, iv_str
+		-- , `rank`, sp, level, cp, hp
+    , round((4096-`rank`)/4095 * 100, 3) AS `rank_%`
+    -- , max_sp
+    , round(sp / max_sp * 100, 3) as `sp_%`
+  from rankings
+  -- order by `rank`
+)
+, rankStats_colsToInsert as (
+	select -- *
+		p_id, f_id, cast(new.leagueId as char(1)) as league_id, new.maxLevel as max_level, iv_id, level, cp, `rank_%`, `rank`, `sp_%`, sp
+	-- for inserting into pvp_rank_stats_i/m -----
+	-- pf_id, iv_id
+--   , `rank`, `rank_%`, sp, `sp_%`, level, cp, hp
+	from rankStats
+	-- order by 
+--   -- pf_id, iv_id
+--   `rank`
+)
+-- test intermediates
+select 
+	/*+	
+			set_var(internal_tmp_mem_storage_engine = MEMORY)
+			set_var(tmp_table_size = 1G)
+			set_var(max_heap_table_size = 1G)
+      set_var(sort_buffer_size = 1G)
+	*/
+-- * from calcultedCpmLimits
+-- * from trueMaxCPMsWithLevelStats
+-- * from rankings
+-- * from rankStats
+-- final select
+* from rankStats_colsToInsert
+-- where (p_id, f_id) = (new.p_id, new.f_id)
+-- limit 1
+;
+
+-- export results to file
+-- into outfile 'pokemon_go/exports/rankStats.csv'
+-- 	fields terminated by ','
+--   lines terminated by '\n'
+-- ;
+END;
+
+-- select * from calcRankStats_byLeagueMaxLevel ;
+-- 
+-- INSERT into calcRankStats_byLeagueMaxLevel VALUES(2, 2, 2, 2, 2, 2);
+-- 
+-- select * from calcRankStats_byLeagueMaxLevel ;
+
+INSERT into calcRankStats_byLeagueMaxLevel -- (pokemon_form_count, p_id, f_id, leagueId, maxLevel, ivFloor) 
+VALUES(
+100, -- pokemon_form_count,
+6, -- p_id,
+2, -- f_id,
+'G', -- leagueId,
+41, -- maxLevel,
+0 -- ivFloor 
+-- (select multiplier from levels where level = min(new.maxLevel, 51)), -- as maxLevelCpm
+-- (select cp_limit from leagues where league_id = new.leagueId) + 0.9999999,  as cpLimit; -- NEED @cpLimit + 0.999999 to capture cases where cp would be floored
+);
+
+select * from currentRankStats;</sql><sql name="createRankStats_byLeagueMaxLevel.sql">/* INSERT RANK STATS INTO pvp_rank_stats_tabular
+	derived from 'calcPokeFormIvLeagueStatsProc,v3.5(WITH-AS)' which was used for pvp_rank_stats, which was pivoted (cols for gl stats and ul_stats)
+*/
+
+delimiter //
+ create procedure _createRankStats_byLeagueMaxLevel (
+create procedure calcRankStats_byLeagueMaxLevel_insert (
+	-- in pId smallint,
+--   in fId tinyInt,
+	in league char(1), /* must be a league_id from leagues table */
+  in maxLevel float,
+  in ivFloor tinyint
+)
+comment
+'calculates rankings and stats for all pokeForms, for a given league, max level, and iv floor; creates temporary table &quot;leageLevelRankStats&quot;' 
+-- 'calculates rankings and stats for selection, inserts into table pvp_rank_stats_tabular.'
+/* next bit was part of comment for when procedure was for multiple pokeform */
+-- REQUIRES exisiting temp table &quot;pf_selection&quot; with cols &quot;p_id&quot; (pokemon id) and &quot;f_id&quot; (form id).
+-- This procedure should be called from a wrapping procedure which creates the temp table before calling this procedure, and drops the temp table afterward'
+/* example */
+-- drop temporary table if exists pf_selection
+-- create temporary table pf_selection (
+-- 	p_id smallint unsigned,
+--   f_id tinyint unsigned,
+-- 	index (p_id, f_id)
+-- )
+begin
+/* should create error handler for invalid cp limits / league */
+/* should create error handler for missing pf_selection temp table */
+-- SET @p_id = pId;
+-- SET @f_id = fId;
+SET @leagueId = league;
+SET @maxLevel = maxLevel;
+set @ivFloor = ivFloor;
+set @maxLevelCpm = (select multiplier from levels where level = least(maxLevel, 51));
+SET @cpLimit = (select cp_limit from leagues where league_id = league) + 0.9999999; /* NEED @cpLimit + 0.999999 to capture cases where cp would be above limit + 1 (i.e. floored back to limit) */
+
+/* for testing */
+-- SET @pokemon_form_count = 100;
+-- SET @p_id = 6;
+-- SET @f_id = 59;
+-- set @leagueId = 'G';
+-- SET @maxLevel = 41;
+-- set @ivFloor = 0;
+-- set @maxLevelCpm = (select multiplier from levels where level = least(maxLevel, 51));
+-- SET @cpLimit = (select cp_limit from leagues where league_id = @leagueId) + 0.9999999; /* NEED @cpLimit + 0.999999 to capture cases where cp would be floored */
+
+/* only needed if using filteredLevels to get max true cpm */
+-- drop temporary table if exists filteredLevels;
+-- create temporary table filteredLevels like levels;
+-- insert into filteredLevels select * from levels where level &lt;= @maxLevel order by level desc;
+
+/* this was for inserting directly into destination table, instead of just selecting result set */
+insert into pvp_rank_stats_tabular
+-- (
+-- -- 		pf_id
+-- --   , gl_rank, `gl_rank_%`, gl_sp, `gl_sp_%`, gl_level, gl_cp, gl_hp
+-- --   , ul_rank, `ul_rank_%`, ul_sp, `ul_sp_%`, ul_level, ul_cp, ul_hp
+-- 		-- -------
+--       p_id, f_id, league_id, max_level
+-- 		, iv_id
+-- 		, level, cp
+--     , `rank_%`, `rank`
+--     , `sp_%`, sp
+--  )
+
+-- drop temporary table if exists leagueLevelRankStats;
+-- create temporary table leagueLevelRankStats 
+-- -- ( index idx_full (pf_id, sp , atk , hp , cp , sta_iv )
+-- -- , index idx_pf_sp (pf_id, sp))
+-- -- engine = memory
+
+-- explain format = json
+	WITH
+pf_selection as (
+	select *
+  from pokemon_forms
+  -- where p_id = @p_id and f_id = @f_id  /* comment out to run calculations for all pokemon */
+  -- where pf_id &lt;= @pokemon_form_count
+  -- where (p_id, f_id, @leagueId, @maxLevel) not in (select p_id, f_id, league_id, max_level from pvp_rank_stats_tabular)
+)
+, ivsAboveFloor as ( -- technically 
+	select * 
+	from ivs
+	where atk_iv &gt;= @ivFloor and def_iv &gt;= @ivFloor and sta_iv &gt;= @ivFloor
+)
+, calcultedCpmLimits as (
+  select 	*
+				-- p_id, f_id, iv_id
+				-- , base_atk, base_def, base_sta
+				, (base_atk + atk_iv) as tAtk
+				, (base_def + def_iv) as tDef
+				, (base_sta + sta_iv) as tSta
+				-- , sqrt((@cpLimit) * 10 / ( (base_atk + atk_iv) * SQRT((base_def + def_iv) * (base_sta + sta_iv)) )) as cpmLimit
+        , ( select multiplier from levels 
+						where multiplier &lt;= sqrt((@cpLimit) * 10 / ( (base_atk + atk_iv) * SQRT((base_def + def_iv) * (base_sta + sta_iv)) )) -- calcCpLimit 
+            order by multiplier desc limit 1
+					) as multiplier
+				-- , sta_iv -- for rank tie-breaking
+	from pf_selection pf
+  -- cross join ivs
+  cross join ivsAboveFloor
+)
+, trueMaxCPMsWithLevelStats as ( -- look level for each iv_id by finding multiplier closest to calculated cpm @ 1500cp and 2500cp [join on (multiplier &lt;= calculated cpm limit 1)]; calculate cp
+	select
+			r.*
+		, l.level
+    -- , l.multiplier
+-- 		pf_id
+--     , iv_id
+--     , iv_str
+--     , sta_iv -- needed for ranking later
+--     -- , atk, def -- base + iv stats
+--     , sta -- need it for CP calc (i.e. NOT sta * multiplier)
+--     -- , cpmLimit -- for debugging level and cp results
+    , GREATEST( 10, FLOOR(( (tAtk) * SQRT(tDef * tSta) * POWER(l.multiplier, 2) )/10 ) ) AS cp -- NEED FLOOR!!
+    , tAtk * l.multiplier as ATK -- needed for ranking later
+-- 		, def * multiplier as DEF
+    , floor(tSta * l.multiplier) as hp -- needed for ranking later
+    , round((tAtk * l.multiplier) * (tDef * l.multiplier) * floor(tSta * l.multiplier)) as sp
+--     , level as level
+--     , multiplier as multiplier
+--     , dust_cost, candy_cost, total_dust, total_candy
+	from calcultedCpmLimits r
+	inner join levels l on (l.multiplier = 
+		-- applying max level via filteredLevels temp table; a bit faster than line below
+			-- select 100 pf -&gt; 36.5 sec duration, 1.6 sec fetch
+      -- select 100 pf into memory table -&gt; 36.5 sec duration
+		-- if(@leagueId = 'M', @maxLevelCpm, (select multiplier from filteredLevels fl where fl.multiplier &lt;= r.cpmLimit order by fl.multiplier desc limit 1))
+		-- applying max level via least of [@maxLevelCpm] or [true cpm] (found in place) 
+			-- select 100 pf -&gt; 27.2 sec duration, 1.6 sec fetch
+		-- least((select multiplier from levels where multiplier &lt;= r.cpmLimit order by multiplier desc limit 1), @maxLevelCpm)
+    -- applying max level via least of [@maxLevelCpm] or [true cpm] (from trueMaxCpms above) 
+			-- select 100 pf -&gt; 16.15 sec duration / 1.6 sec fetch
+      -- select 100 pf into memory table -&gt; 29.3 sec duration
+		if(@leagueId = 'M', @maxLevelCpm, least(r.multiplier, @maxLevelCpm))
+	)
+)
+, rankings as (
+  select *
+		-- pf_id, iv_id, level, cp, sp -- , hp
+		, cast(rank () over(pokeForm order by sp desc, ATK desc, hp desc, cp desc, sta_iv desc) as signed) as `rank`
+		, max(sp) over(pokeForm) as max_sp
+    from trueMaxCPMsWithLevelStats -- 37.000 sec / 5.938 sec
+														-- 36.938 sec / 6.125 sec
+		-- from leagueLevelRankStats 
+    window pokeForm as (partition by pf_id)
+    -- order by `rank`
+)
+, rankStats as (
+	select *
+			-- pf_id, iv_id, iv_str
+		-- , `rank`, sp, level, cp, hp
+    , round((4096-`rank`)/4095 * 100, 3) AS `rank_%`
+    -- , max_sp
+    , round(sp / max_sp * 100, 3) as `sp_%`
+  from rankings
+  -- order by `rank`
+)
+, rankStats_colsToInsert as (
+	select -- *
+		p_id, f_id, cast(@leagueId as char(1)) as league_id, @maxLevel as max_level, iv_id, level, cp, `rank_%`, `rank`, `sp_%`, sp
+	/* for inserting into pvp_rank_stats_i/m ---- */
+	-- pf_id, iv_id
+--   , `rank`, `rank_%`, sp, `sp_%`, level, cp, hp
+	from rankStats
+	-- order by 
+--   -- pf_id, iv_id
+--   `rank`
+)
+/* test intermediates */
+select 
+	/*+	
+			set_var(internal_tmp_mem_storage_engine = MEMORY)
+			set_var(tmp_table_size = 1G)
+			set_var(max_heap_table_size = 1G)
+      set_var(sort_buffer_size = 1G)
+	*/
+-- * from calcultedCpmLimits
+-- * from trueMaxCPMsWithLevelStats
+-- * from rankings
+-- * from rankStats
+/* final select */
+* from rankStats_colsToInsert
+-- where (p_id, f_id) = (@p_id, @f_id)
+-- limit 1
+;
+
+/* export results to file */
+-- into outfile 'pokemon_go/exports/rankStats.csv'
+-- 	fields terminated by ','
+--   lines terminated by '\n'
+-- ;
+
+end //
+delimiter ;</sql><sql name="sql5.sql">-- explain query plan
+WITH args0 as  (
+ select
+	100	as pokemon_form_count,
+	3	as p_id,
+	2	as f_id,
+	'G'	as leagueId,
+	40	as maxLevel,
+	0	as ivFloor 
+)
+, args as (
+	select *
+	, (select cp_limit from leagues where league_id = leagueId) + 0.9999999 as cpLimit
+	, (select multiplier from levels where level = min(maxLevel, 51)) as maxLevelCpm
+	from args0
+)
+-- select * from args;
+, pf_selection as (
+	select pf.*
+  from pokemon_forms as pf, args
+  where pf.p_id = args.p_id and pf.f_id = args.f_id  -- comment out to run calculations for all pokemon
+--   where pf_id &lt;= args.pokemon_form_count
+  -- where (p_id, f_id, args.leagueId, args.maxLevel) not in (select p_id, f_id, league_id, max_level from pvp_rank_stats_tabular)
+)
+, ivsAboveFloor as ( -- technically 
+	select ivs.* 
+	from ivs, args
+	where ivs.iv_floor &gt;= args.ivFloor
+)
+, maxCpms as (
+  select 
+	pf.*, ivs.*
+	-- p_id, f_id, iv_id
+	-- , base_atk, base_def, base_sta
+	, (base_atk + atk_iv) as tAtk
+	, (base_def + def_iv) as tDef
+	, (base_sta + sta_iv) as tSta
+	-- , sqrt((args.cpLimit) * 10 / ( (base_atk + atk_iv) * SQRT((base_def + def_iv) * (base_sta + sta_iv)) )) as cpmLimit
+	, ( select multiplier from levels 
+					where multiplier &lt;= sqrt(args.cpLimit * 10 / ( (base_atk + atk_iv) * SQRT((base_def + def_iv) * (base_sta + sta_iv)) )) -- calcCpLimit 
+		order by multiplier desc limit 1
+				) as multiplier
+	-- , sta_iv -- for rank tie-breaking
+	from pf_selection pf, args
+	cross join ivsAboveFloor ivs
+	-- cross join ivs where ivs.iv_floor &gt;= args.ivFloor
+	
+)
+, trueMaxCPMsWithLevelStats as ( -- look level for each iv_id by finding multiplier closest to calculated cpm new. 1500cp and 2500cp [join on (multiplier &lt;= calculated cpm limit 1)]; calculate cp
+	select
+			r.*
+		, l.level
+    -- , l.multiplier
+-- 		pf_id
+--     , iv_id
+--     , iv_str
+--     , sta_iv -- needed for ranking later
+--     -- , atk, def -- base + iv stats
+--     , sta -- need it for CP calc (i.e. NOT sta * multiplier)
+--     -- , cpmLimit -- for debugging level and cp results
+    , max( 10, FLOOR(( (tAtk) * SQRT(tDef * tSta) * POWER(l.multiplier, 2) )/10 ) ) AS cp -- NEED FLOOR!!
+    , tAtk * l.multiplier as ATK -- needed for ranking later
+-- 		, def * multiplier as DEF
+    , floor(tSta * l.multiplier) as hp -- needed for ranking later
+    , round((tAtk * l.multiplier) * (tDef * l.multiplier) * floor(tSta * l.multiplier)) as sp
+--     , level as level
+--     , multiplier as multiplier
+--     , dust_cost, candy_cost, total_dust, total_candy
+	from maxCpms r, args
+	inner join levels l 
+		on (l.multiplier = iif(args.leagueId = 'M',
+								/* if true */ args.maxLevelCpm, 
+								/* else */ min(args.maxLevelCpm,
+												-- (select multiplier from levels where multiplier &lt;= r.cpmLimit order by multiplier desc limit 1) 
+													/* applying max level via min of [args.maxLevelCpm] or [true cpm] (found in place)
+													select 100 pf -&gt; 27.2 sec duration, 1.6 sec fetch */
+												r.multiplier 
+													/* applying max level via trueMaxCpms established in ) 
+													select 100 pf -&gt; 16.15 sec duration / 1.6 sec fetch
+													select 100 pf into memory table -&gt; 29.3 sec duration */
+												
+			)))
+)
+, rankings as (
+  select *
+		-- pf_id, iv_id, level, cp, sp -- , hp
+		, cast(rank () over(pokeForm order by sp desc, ATK desc, hp desc, cp desc, sta_iv desc) as signed) as rank_
+		, max(sp) over(pokeForm) as max_sp
+    from trueMaxCPMsWithLevelStats -- 37.000 sec / 5.938 sec
+														-- 36.938 sec / 6.125 sec
+		-- from leagueLevelRankStats 
+    window pokeForm as (partition by pf_id)
+    -- order by rank_
+)
+, rankStats as (
+	select *
+			-- pf_id, iv_id, iv_str
+		-- , rank_, sp, level, cp, hp
+    , round((4096-rank_)/4095 * 100, 3) AS `rank_%`
+    -- , max_sp
+    , round(sp / max_sp * 100, 3) as `sp_%`
+  from rankings
+  -- order by rank_
+)
+, rankStats_colsToInsert as (
+	select -- *
+		rs.p_id, rs.f_id, cast(args.leagueId as char(1)) as league_id, args.maxLevel as max_level, iv_id, level, cp, `rank_%`, rank_, `sp_%`, sp
+	-- for inserting into pvp_rank_stats_i/m -----
+	-- pf_id, iv_id
+--   , rank_, `rank_%`, sp, `sp_%`, level, cp, hp
+	from rankStats rs, args
+	-- order by 
+--   -- pf_id, iv_id
+--   rank_
+)
+-- test intermediates
+select 
+	/*+	
+			set_var(internal_tmp_mem_storage_engine = MEMORY)
+			set_var(tmp_table_size = 1G)
+			set_var(max_heap_table_size = 1G)
+      set_var(sort_buffer_size = 1G)
+	*/
+-- * from maxCpms
+-- * from trueMaxCPMsWithLevelStats
+-- * from rankings
+-- * from rankStats
+-- final select
+* from rankStats_colsToInsert
+-- where (p_id, f_id) = (args.p_id, args.f_id)
+-- limit 1
+;
+
+-- export results to file
+-- into outfile 'pokemon_go/exports/rankStats.csv'
+-- 	fields terminated by ','
+--   lines terminated by '\n'
+-- ;</sql><sql name="SQL 6">asdfasdf</sql><current_tab id="3"/></tab_sql></sqlb_project>

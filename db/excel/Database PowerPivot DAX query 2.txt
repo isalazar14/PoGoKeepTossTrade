@@ -1,0 +1,18 @@
+gl_max_stat_product
+gl_max_sp_iv_id
+gl_max_sp_level_id
+gl_max_sp_cp
+gl_max_sp_hp
+gl_min_stat_product
+gl_min_sp_iv_id
+gl_min_sp_level_id
+gl_min_sp_cp
+gl_min_sp_hp
+gl_min_level_id
+gl_max_level_id
+
+
+lvl at SP Max:=LOOKUPVALUE([gl_level],pokemon_ivs[gl_stat_product],[Max of gl_stat_product])
+lvl at SP Max:=LOOKUPVALUE([gl_level],pokemon_ivs[gl_stat_product],[Max of gl_stat_product],pokemon_ivs[pokemon_id],EARLIER(pokemon_ivs[pokemon_id]),pokemon_ivs[form_id],EARLIER(pokemon_ivs[form_id]))
+
+lvl at SP Max2:= CALCULATE(pokemon_ivs[gl_level], FILTER(pokemon_ivs,[pokemon_form_id]=EARLIER(pokemon_ivs[pokemon_form_id]) && [gl_stat_product]=[Max of gl_stat_product]))

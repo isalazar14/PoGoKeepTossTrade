@@ -1,0 +1,27 @@
+=if( [cp_max] <= 1500,
+	0.7903,
+	Calculate (
+	Max ( 'levels'[multiplier]),
+		Filter ( 'levels', 'levels'[multiplier] <= [gl_reverse_cpm] )
+	)
+)
+
+
+if( [cp_max] <= 1500,
+0.7903,
+VAR reverseCPM = 
+    SQRT(
+        (10*1500)
+        / (
+            (   RELATED(pokemon_details[attack])+[attack_iv])
+             * SQRT(RELATED(pokemon_details[defense])+[defense_iv])
+             * SQRT(RELATED(pokemon_details[stamina])+[stamina_iv])
+            )
+        )
+RETURN
+
+Calculate (
+    Max ( 'levels'[multiplier]),
+        Filter ( 'levels', 'levels'[multiplier] <= reverseCPM )
+    )
+)

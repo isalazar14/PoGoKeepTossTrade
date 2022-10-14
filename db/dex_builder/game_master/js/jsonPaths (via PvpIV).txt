@@ -1,0 +1,12 @@
+    jmespathQuery = '[? templateId >= `"V"`] | [? templateId < `"W"`] | '+"[?contains (templateId,'POKEMON')] | [?!contains (templateId,'_NORMAL')]"
+    jmespathQuery += "| [?templateId != 'V0487_POKEMON_GIRATINA'] | [?templateId != 'V0492_POKEMON_SHAYMIN'] | [?templateId != 'V0413_POKEMON_WORMADAM']"
+    jmespathQuery += "| [?templateId != 'V0555_POKEMON_DARMANITAN'] | [?templateId != 'V0648_POKEMON_MELOETTA']"
+    jmespathQuery += "| [?!contains (templateId,'V0649_POKEMON_GENESECT_')] | [?!contains (templateId,'V0586_POKEMON_SAWSBUCK_')] | [?!contains (templateId,'V0585_POKEMON_DEERLING_')]"
+    jmespathQuery += "| [?!contains (templateId,'V0550_POKEMON_BASCULIN_')] | [?!contains (templateId,'V0493_POKEMON_ARCEUS_')] | [?!contains (templateId,'V0422_POKEMON_SHELLOS_')]"
+    jmespathQuery += "| [?!contains (templateId,'V0351_POKEMON_CASTFORM_')] | [?!contains (templateId,'V0421_POKEMON_CHERRIM_')] | [?!contains (templateId,'V0412_POKEMON_BURMY_')]"
+    jmespathQuery += "| [?!contains (templateId,'POKEMON_SAWSBUCK_')] | [?!contains (templateId,'V0423_POKEMON_GASTRODON_')] | [?!contains (templateId,'V0647_POKEMON_KELDEO_')]"
+    jmespathQuery += "| [?!contains (templateId,'V0593_POKEMON_JELLICENT_FEMALE')] | [?!contains (templateId,'V0592_POKEMON_FRILLISH_FEMALE')]"
+    jmespathQuery += "| [?!contains (templateId,'_SHADOW')] | [?!contains (templateId,'_PURIFIED')] | [?!contains (templateId,'_FALL_2019')] | [?!contains (templateId,'_COSTUME_2020')]"
+    jmespathQuery += "| [?!contains (templateId,'FORMS_')] | [?!contains (templateId,'_COPY_2019')] | [?!contains (templateId,'VS_')]"
+    jmespathQuery += "| [?!contains (templateId,'_HOME_')] | [?!contains (templateId,'V0678_POKEMON_MEOWSTIC_FEMALE')] | [?!contains (templateId,'V0668_POKEMON_PYROAR_FEMALE')]"
+    jmespathQuery += "| [*].{pokemonId: data.pokemonSettings.pokemonId,  form: data.pokemonSettings.form, megaEvoIds: data.pokemonSettings.tempEvoOverrides[*].tempEvoId, evolutionIds: data.pokemonSettings.evolutionBranch[*].evolution, evolutionForms: data.pokemonSettings.evolutionBranch[*].form, familyId: data.pokemonSettings.familyId, parentPokemonId: data.pokemonSettings.parentPokemonId, baseAttack: data.pokemonSettings.stats.baseAttack, baseDefense: data.pokemonSettings.stats.baseDefense, baseStamina: data.pokemonSettings.stats.baseStamina, megaBaseStats: data.pokemonSettings.tempEvoOverrides[*].stats, type: data.pokemonSettings.type, type2: data.pokemonSettings.type2, templateId: templateId}";
