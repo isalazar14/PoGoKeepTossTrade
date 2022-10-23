@@ -1,24 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <!-- <script src="./gpujsTest.js" type="module"></script> -->
-  </head>
-  <body>
-    <noscript>javascript not enabled/supported, can't run calculations</noscript>
-    <p id='timeNow'></p>
-    <p id="cpuCores"></p>
-    <p id="gpuSupport"></p>
 
-    <table>
-      <thead>
-        <th>Gpu feature</th>
-        <th>Supported</th>
-      </thead>
-      <tbody id="gpuFeatureList">
-        <!-- 
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <!-- <script src="./gpujsTest.js" type="module"></script> -->
+</head>
+
+<body>
+  <noscript>javascript not enabled/supported, can't run calculations</noscript>
+  <p id='timeNow'></p>
+  <p id="cpuCores"></p>
+  <p id="gpuSupport"></p>
+
+  <table>
+    <thead>
+      <th>Gpu feature</th>
+      <th>Supported</th>
+    </thead>
+    <tbody id="gpuFeatureList">
+      <!-- 
         <tr><td>isGPUSupported</td><td></td></tr> 
         <tr><td>isKernelMapSupported</td><td></td></tr> 
         <tr><td>isOffscreenCanvasSupported</td><td></td></tr> 
@@ -28,11 +30,148 @@
         <tr><td>isCanvasSupported</td><td></td></tr> 
         <tr><td>isGPUHTMLImageArraySupported</td><td></td></tr>
         <tr><td>isSinglePrecisionSupporte</td><td></td></tr>  -->
-      </tbody>
-    </table>
-    <p id="calcTime"></p>
-    <script src="https://unpkg.com/gpu.js@latest/dist/gpu-browser.min.js"></script>
-    <script src="https://unpkg.com/papaparse@5.3.0/papaparse.min.js"></script>
-    <script src="./gpujsTest.js"></script>
-  </body>
+    </tbody>
+  </table>
+  <div id="calcTime"></div>
+  <p id="results"></p>
+
+  <!-- <script type="text/javascript">
+    document.body.append('HELLO FROM SCRIPT')
+  </script> -->
+  <!-- <script src="https://unpkg.com/gpu.js@latest/dist/gpu-browser.min.js"></script> -->
+  <script src="https://unpkg.com/gpu.js@2.15.0/dist/gpu-browser.js"></script>
+  <script src="https://unpkg.com/papaparse@5.3.0/papaparse.min.js"></script>
+  <script src="./gpujsTest.js"></script>
+  <!-- <script>
+    // GPU is a constructor and namespace for browser
+    
+    /** whole level mons */
+    const mons = [[0,100,100,100],[4, 116, 93, 118], [13, 63, 50, 120], [63, 195, 82, 93], [66, 137, 82, 172], [66, 137, 82, 172], [86, 85, 121, 163], [88, 135, 90, 190], [88, 135, 90, 190], [92, 186, 67, 102], [92, 186, 67, 102], [102, 107, 125, 155], [111, 140, 127, 190], [133, 104, 114, 146], [133, 104, 114, 146], [133, 104, 114, 146], [133, 104, 114, 146], [133, 104, 114, 146], [137, 153, 136, 163], [143, 190, 169, 330], [198, 175, 87, 155], [213, 17, 396, 85], [220, 90, 69, 137], [228, 152, 83, 128], [233, 198, 180, 198], [265, 75, 59, 128], [276, 106, 61, 120], [276, 106, 61, 120], [276, 106, 61, 120], [279, 175, 174, 155], [304, 121, 141, 137], [345, 105, 150, 165], [349, 29, 85, 85], [349, 29, 85, 85], [371, 134, 93, 128], [371, 134, 93, 128], [371, 134, 93, 128], [387, 119, 110, 146], [390, 113, 86, 127], [397, 142, 94, 146], [425, 117, 80, 207], [498, 115, 85, 163], [498, 115, 85, 163], [506, 107, 86, 128], [529, 154, 85, 155], [557, 118, 128, 137], [559, 132, 132, 137]]
+    const ivs = [[0,0,0],[3, 13, 9], [14, 13, 13], [5, 12, 14], [0, 10, 13], [15, 15, 13], [13, 15, 14], [10, 14, 15], [12, 15, 12], [1, 10, 14], [0, 10, 8], [14, 14, 12], [0, 11, 14], [0, 13, 7], [0, 7, 14], [14, 13, 13], [13, 14, 13], [15, 14, 9], [1, 14, 15], [1, 11, 2], [1, 13, 15], [15, 3, 15], [15, 14, 11], [1, 10, 14], [4, 15, 13], [14, 15, 14], [0, 12, 8], [0, 15, 7], [15, 14, 13], [2, 7, 15], [13, 15, 12], [15, 14, 15], [14, 13, 13], [14, 14, 12], [5, 15, 15], [3, 12, 13], [1, 14, 13], [3, 15, 13], [15, 15, 12], [5, 13, 14], [15, 15, 13], [13, 15, 13], [14, 14, 12], [12, 14, 15], [12, 14, 13], [4, 13, 14], [12, 15, 15]]
+    const cpms = [0.094, 0.5822789, 0.76156384, 0.48168495, 0.3752356, 0.7068842, 0.69414365, 0.5974, 0.5974, 0.5343543, 0.5667545, 0.7068842, 0.29024988, 0.5667545, 0.7068842, 0.7193991, 0.7317, 0.7317, 0.69414365, 0.5667545, 0.5822789, 0.7068842, 0.7193991, 0.5822789, 0.5667545, 0.74976104, 0.69414365, 0.69414365, 0.7377695, 0.69414365, 0.7193991, 0.5822789, 0.5974, 0.5974, 0.4627984, 0.6811649, 0.7068842, 0.34921268, 0.5974, 0.5822789, 0.64065295, 0.7068842, 0.74378943, 0.5974, 0.7068842, 0.5822789, 0.51739395,]
+    const float_cpms = new Float32Array(cpms)
+    
+    /** half level mons */
+    // const mons = [[59,227,166,207],[130,237,186,216],[334,141,201,181],[340,151,141,242]]
+    // const ivs = [[1,14,12],[2,11,13],[1,10,10],[2,14,13]]
+    // const float_cpms = [0.574569148039264,0.542635762230353,0.725575616972598,0.700542893277978]
+
+    function calcCP_CPU() {
+      let cpu_results = []
+      performance.mark('calcCP_cpu')
+      mons.forEach((mon, i) => {
+        // const atkBaseIdx = 2;
+        // const defBaseIdx = 3;
+        // const staBaseIdx = 4;
+        // const atkIvIdx = 1;
+        // const defIvIdx = 2;
+        // const staIvIdx = 3;
+
+        const a =
+          mons[i][1] + ivs[i][0];
+        const d =
+        mons[i][2] + ivs[i][1];
+        const s =
+        mons[i][3] + ivs[i][2];
+        // const cpm = float_cpms[i];
+        const cpm = cpms[i];
+        const cp = Math.floor((a * Math.sqrt(d) * Math.sqrt(s) * Math.pow(cpm, 2)) / 10)
+        const sp = Math.round((a * cpm * d * cpm * Math.floor(s * cpm))) / 1000;
+        // return [a,Math.sqrt(d),Math.sqrt(s),cpm*cpm] //
+        // return [pokeForms[this.thread.z][2], ivs[this.thread.y][1], cpms[this.thread.x]]
+        cpu_results.push([mons[i][0], cpm, cp, sp])
+        // cpu_results.push([mons[i][0], a, d, s])
+      })
+      performance.mark('calcCP_cpu')
+      console.log('cpu_forEach_results:', performance.measure('calcCP_cpu'))
+      // console.log(cpu_results)
+      return cpu_results
+    }
+    console.log(calcCP_CPU())
+    
+    
+    const gpu = new GPU();
+    const calcCp_GPU = gpu.createKernel(function (baseStats, ivs, cpms) {
+      /**
+       * dimensions in .setOutput() are in [x, y, z] order,
+       * and correspond to the length of the arrays in the respective thread (this.thread._).
+       * multidimensional output will be nested in reverse order:
+       * if output is [x,y] -> result will be [y[x]] -> array of length y, with nested arrays of length x
+       * if output is [x,y,z] -> result will be [z[y[x]]] -> array of length z, with nested arrays of length y, which also has nested arrays of length x
+       **/
+
+      /**
+       * I want output as [pokemonForms[ivs[cpms]]] so...
+       * pokeForms  -> this.thread.z
+       * ivs        -> this.thread.y
+       * cpms       -> this.thread.x
+       **/
+
+      /**
+       * pokeForms[this.thread.z][2] -> atkBase
+       * pokeForms[this.thread.z][3] -> defBase
+       * pokeForms[this.thread.z][3] -> staBase
+       * ivs[this.thread.y][1] -> atkIv
+       * ivs[this.thread.y][2] -> defIv
+       * ivs[this.thread.y][3] -> staIv
+       * cpms[this.thread.x] -> cpm
+       **/
+
+      // function calcCp (atk, def, sta, cpm) {
+      //   // atk, def, sta are base+IV
+      //   return Math.max(10,
+      //   ((a * Math.sqrt(d) * Math.sqrt(s) * cpm*cpm )  / 10) >> 0
+      // )}
+
+      const atkBaseIdx = 1;
+      const defBaseIdx = 2;
+      const staBaseIdx = 3;
+      const atkIvIdx = 0;
+      const defIvIdx = 1;
+      const staIvIdx = 2;
+
+      const a =
+        baseStats[this.thread.x][atkBaseIdx] + ivs[this.thread.x][atkIvIdx];
+      const d =
+        baseStats[this.thread.x][defBaseIdx] + ivs[this.thread.x][defIvIdx];
+      const s =
+        baseStats[this.thread.x][staBaseIdx] + ivs[this.thread.x][staIvIdx];
+      const cpm = cpms[this.thread.x];
+      const cp = Math.max(
+        10,
+        ((a * Math.sqrt(d) * Math.sqrt(s) * cpm * cpm) / 10) >> 0
+      );
+      const sp = ((a * cpm * d * cpm * Math.floor(s * cpm)) >> 0) / 1000;
+      // return [a,Math.sqrt(d),Math.sqrt(s),cpm*cpm] //
+      // return [pokeForms[this.thread.z][2], ivs[this.thread.y][1], cpms[this.thread.x]]
+      return [baseStats[this.thread.x][0], cpm, cp, sp];
+      // return [baseStats[this.thread.z][0], cpm];
+    }).setOutput([50]); // [x, y, z] -> matches this.thread._
+    performance.mark('calcCP_gpu')
+    let gpu_results = calcCp_GPU(mons, ivs, cpms)
+    performance.mark('calcCP_gpu')
+    console.log('gpu_results: ', performance.measure('calcCP_gpu'))
+    console.log(gpu_results)
+
+    const multiplyMatrix = gpu.createKernel(function () {
+      const cpm = 0.5974
+      const atk = 29
+      const def = 85
+      const sta = 85
+      const aIv = 14
+      const dIv = 14
+      const sIv = 12
+      const tAtk = atk + aIv
+      const tDef = def + dIv
+      const tSta = sta + sIv
+      const cp = Math.floor(((tAtk) * Math.sqrt(tDef * tSta) * Math.pow(cpm, 2)) / 10)
+      return cp
+      // }).setOutput([512,512]);
+    }).setOutput([1]);
+
+    // console.log(multiplyMatrix([2,4,6],[3,5,7]));
+    // console.log(multiplyMatrix());
+  </script> -->
+</body>
+
 </html>
