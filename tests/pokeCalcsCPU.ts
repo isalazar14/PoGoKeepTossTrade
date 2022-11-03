@@ -25,7 +25,7 @@ export function getCalcCPMsAtCpLimit_CPU(
   return calcCpms as number[][];
 }
 
-export function getTrueCpmsFromCalcCpms_CPU(calcCpms: number[][], cpms: PokeCpmSet[]) {
+export function getMaxValidCpms_CPU(calcCpms: number[][], cpms: PokeCpmSet[]) {
   const yLength = calcCpms.length; /* number of pokeforms (1 calcCPM set per pokemform) */
   const xLength = calcCpms[0].length; /* number of IV combos per pokeform */
   const lastCpmIdx = cpms.length - 1; /* starting point for reverse scan of CPMs (CPMs length depends on IV_BATCH size) */

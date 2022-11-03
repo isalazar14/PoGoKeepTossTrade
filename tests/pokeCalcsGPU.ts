@@ -135,21 +135,17 @@ export function getTrueCpmsFromCpmIdxs(cpmIdxs, cpms) {
  * @param {boolean} returnLevel If true, result includes level. If returnCPM is also true, result is 2D array
  * @returns
  */
-export function getTrueCpmsFromCalcCpms(
+export function getMaxValidCpms(
   calcCpms: number[][],
   cpms: PokeCpmSet[],
-  lastCpmIdx: number,
   returnCPM: boolean,
   returnLevel: boolean
 ) {
   // debugger;
-
   if (!returnCPM && !returnLevel) return 
-
   const { x, y } = this.thread;
-  /* x -> iterator for pokeform | y -> iterator for IVs*/
-  // let i = cpms.length;
-  let i = lastCpmIdx;
+  /*  x -> curent pokeform idx  |  y -> current IVs idx */
+  let i = cpms.length - 1 /* idx of last CPM */;
   while (i > -1 && calcCpms[y][x] < cpms[i][1]) {
     i--;
   }

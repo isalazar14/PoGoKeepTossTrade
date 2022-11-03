@@ -8,14 +8,14 @@ import {
 import { createIvMatrix, getCorrectCpms } from "./pokeCalcHelpers";
 import {
   getCalcCPMsAtCpLimit_CPU,
-  getTrueCpmsFromCalcCpms_CPU,
+  getMaxValidCpms_CPU,
 } from "./pokeCalcsCPU";
 import {
   calcCP,
   calcCpmsAtCpLimit,
   createKernel,
   getTrueCpmIdxsFromCalcCpms,
-  getTrueCpmsFromCalcCpms,
+  getMaxValidCpms,
   getTrueCpmsFromCpmIdxs,
 } from "./pokeCalcsGPU";
 /* For running in html without bundler
@@ -149,7 +149,7 @@ const getTrueCpmsFromCpmIdxs_gpuG = createKernel(gpuG, getTrueCpmsFromCpmIdxs, {
 
 const getTrueCpmsFromCalcCpms_gpuG = createKernel(
   gpuG,
-  getTrueCpmsFromCalcCpms,
+  getMaxValidCpms,
   {
     output: [calcParams.IV_BATCH_SIZE, calcParams.PF_BATCH_SIZE],
     // pipeline: true
@@ -159,7 +159,7 @@ const getTrueCpmsFromCalcCpms_gpuG = createKernel(
 );
 const getTrueCpmsFromCalcCpms_gpuC = createKernel(
   gpuC,
-  getTrueCpmsFromCalcCpms,
+  getMaxValidCpms,
   {
     output: [calcParams.IV_BATCH_SIZE, calcParams.PF_BATCH_SIZE],
     // pipeline: true
@@ -215,7 +215,7 @@ let { calcResult: calcCpms_cpu } = runCalcPerfTest(
 
 /* getTrueCpmsFromCalcCpms_cpu */
 const getTrueCpmFromCalcCpms_cpu_t0 = performance.now();
-let trueCpmsFrpmCalcCpms_cpu = getTrueCpmsFromCalcCpms_CPU(
+let trueCpmsFrpmCalcCpms_cpu = getMaxValidCpms_CPU(
   calcCpms_cpu,
   cpmsFloatArray
   // cpmsFloatArray.length - 1

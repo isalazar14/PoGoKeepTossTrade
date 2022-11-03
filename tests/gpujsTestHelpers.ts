@@ -35,10 +35,11 @@ export function getPokeForms(
 					/* Remaining rows are pokeforms */
           let [, ...data] = parseResults.data as unknown as PokeFormBaseStatsSet[];
           let result = { headers, data };
-          if (options?.preview) {
-            /* no options OR preview option set -> pass through results */
-            result.data = parseResults.data as PokeFormBaseStatsSet[];
-          } else if (options?.pIdRange) {
+          // if (options?.preview) {
+          //   /* no options OR preview option set -> pass through results */
+          //   result.data = parseResults.data as PokeFormBaseStatsSet[];
+          // } else 
+          if (options?.pIdRange) {
             /* range option set -> get all rows with matching pId, including multiple forms */
             result.data = data.filter(
               (pf) =>
