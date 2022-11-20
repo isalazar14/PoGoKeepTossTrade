@@ -299,19 +299,43 @@
     const gpuG = new GPU({ mode: "gpu" });
     // const gpuC = new GPU({ mode: "cpu" });
 
+    const warmup_kernel = gpuG.createKernel(function () {
+      // const {x, y} = this.thread
+      return 0
+    }, {
+      output: [1000, 5000],
+      pipeline: true,
+      immutable: true
+    })
+
     const getPfIvLevelsSPsAtCpLimit_kernel = createKernel(gpuG, getPfIvLevelsSPsAtCpLimit_GPU, {
       output: [
         testParams.IV_BATCH_SIZE || testParams.DEFAULT_IV_BATCH_SIZE,
         testParams.PF_BATCH_SIZE || testParams.DEFAULT_PF_BATCH_SIZE
       ],
-      pipeline: true,
+      // pipeline: true,
       // optimizeFLoatMemory: true,
       // tactic: "precision",
       // tactic: "speed",
-      // fixIntegerDivisionAccuracy: true
+      // fixIntegerDivisionAccuracy: true,
+      // immutable: true
     });
 
-    const sortPfIVsAtCpLimit_kernel = createKernel(gpuG, sortPfIVsAtCpLimit_GPU, {
+    // const sortPfIVsAtCpLimit_kernel = createKernel(gpuG, sortPfIVsAtCpLimit_GPU, {
+    //   output: [
+    //     testParams.IV_BATCH_SIZE || testParams.DEFAULT_IV_BATCH_SIZE,
+    //     testParams.PF_BATCH_SIZE || testParams.DEFAULT_PF_BATCH_SIZE
+    //   ],
+    //   // pipeline: true,
+    //   // optimizeFLoatMemory: true,
+    //   // tactic: "precision",
+    //   // tactic: "speed",
+    //   // fixIntegerDivisionAccuracy: true
+    // });
+    // console.log(sortPfIVsAtCpLimit_kernel.toJSON())
+    /* LOADING KERNEL FROM JSON MAY REDUCE KERNEL STARTUP TIME, BUT THREW ERRORS I COULD NOT RESOLVE */
+
+    const gpuOddEvenSort_oddPhase_kernel = createKernel(gpuG, gpuOddEvenSort_oddPhase, {
       output: [
         testParams.IV_BATCH_SIZE || testParams.DEFAULT_IV_BATCH_SIZE,
         testParams.PF_BATCH_SIZE || testParams.DEFAULT_PF_BATCH_SIZE
@@ -322,14 +346,82 @@
       // tactic: "speed",
       // fixIntegerDivisionAccuracy: true
     });
-    // console.log(sortPfIVsAtCpLimit_kernel.toJSON())
-    /* LOADING KERNEL FROM JSON MAY REDUCE KERNEL STARTUP TIME, BUT THREW ERRORS I COULD NOT RESOLVE */
 
+    const gpuOddEvenSort_evenPhase_kernel = createKernel(gpuG, gpuOddEvenSort_evenPhase, {
+      output: [
+        testParams.IV_BATCH_SIZE || testParams.DEFAULT_IV_BATCH_SIZE,
+        testParams.PF_BATCH_SIZE || testParams.DEFAULT_PF_BATCH_SIZE
+      ],
+      // pipeline: true,
+      // optimizeFLoatMemory: true,
+      // tactic: "precision",
+      // tactic: "speed",
+      // fixIntegerDivisionAccuracy: true
+    });
+
+    const gpuOddEvenSort_kernel = gpuG.combineKernels(
+      gpuOddEvenSort_oddPhase_kernel,
+      gpuOddEvenSort_evenPhase_kernel,
+      function (input, n, spIdx) {
+        result = gpuOddEvenSort_evenPhase_kernel(gpuOddEvenSort_oddPhase_kernel(input, spIdx), spIdx)
+        for (let i = 1; i < n; i++) {
+          let result = gpuOddEvenSort_evenPhase_kernel(gpuOddEvenSort_oddPhase_kernel(result, spIdx), spIdx)
+        }
+        return result;
+      }
+    )
+
+    const getPfIvLevelsSPsAtCpLimit_gpuOddEvenSort_kernel = gpuG.combineKernels(
+      getPfIvLevelsSPsAtCpLimit_kernel,
+      gpuOddEvenSort_oddPhase_kernel,
+      gpuOddEvenSort_evenPhase_kernel,
+      function (cpLimit, pokeForms, ivs, cpms, lastCpmIdx, n, spIdx) {
+        result = gpuOddEvenSort_evenPhase_kernel(
+          gpuOddEvenSort_oddPhase_kernel(
+            getPfIvLevelsSPsAtCpLimit_kernel(cpLimit, pokeForms, ivs, cpms, lastCpmIdx), spIdx), spIdx)
+        for (let i = 0; i < n; i++) {
+          let result = gpuOddEvenSort_evenPhase_kernel(gpuOddEvenSort_oddPhase_kernel(result, spIdx), spIdx)
+        }
+        return result;
+      }
+    )
+
+    // const add = gpuG.createKernel(function (a, b) {
+    //   return a[this.thread.x] + b[this.thread.x];
+    // }).setOutput([2]);
+
+    // const multiply = gpuG.createKernel(function (a, b) {
+    //   return a[this.thread.x] * b[this.thread.x];
+    // }).setOutput([2]);
+
+    // const superKernel = gpuG.combineKernels(add, multiply, function (a, b, c) {
+    //   // return multiply(add(a, b), c);
+    //   return [0]
+    // });
+
+    // console.log(superKernel([2,5], [3,6], [4,7]))
+
+    // const oddEvenSortIteration_kernel = gpuG.combineKernels(
+    //   // add,multiply,
+    //   gpuOddEvenSort_oddPhase_kernel,
+    //   gpuOddEvenSort_evenPhase_kernel,
+    //   function (input, spIdx) {
+    //     // let { x: pfIdx } = this.thread
+    //     return gpuOddEvenSort_evenPhase_kernel(gpuOddEvenSort_oddPhase_kernel(input, spIdx), spIdx)
+    //     // return this.thread.x + this.thread.y
+    //   }
+    // )
+
+    // console.log('warming up gpu')
+    // performance.mark('gpu_warmup')
+    // let warmupResults = warmup_kernel()
+    // // warmupResults.delete()
+    // console.log('gpu warmup duration (ms)', performance.measure('gpu_warmup').duration)
     //#endregion CREATE GPU KERNELS
 
     const calcTimeRow_calcThenValidCPMs = document.querySelector("tr#calcThenValidCPMs"),
-     calcTimeRow_getPfIvLevelsSPs = document.querySelector("tr#sortSPs"),
-     calcTimeRow_sortSPs = document.querySelector("tr#spPercent");
+      calcTimeRow_getPfIvLevelsSPs = document.querySelector("tr#sortSPs"),
+      calcTimeRow_sortSPs = document.querySelector("tr#spPercent");
 
     let pokeForms, pfHeaders,
       pFIvLevelsSPsAtCpLimit_cpu,
@@ -368,32 +460,32 @@
           //#region getPfIvLevelsSPsAtCpLimit_GPU
 
           /* GPU */
-          pfIvLevelsSPsAtCpLimit_gpu = timeOperation("getPfIvLevelsSPsAtCpLimit_GPU", {
-            fn: getPfIvLevelsSPsAtCpLimit_kernel,
-            fnArgs: [testParams.CP_LIMIT, pokeFormsFlat, ivsFlat, cpmsFlat, cpms.length - 1],
-          }, {
-            logResult: false,
-            // logResult: true,
-            renderPerformance: {
-              targetEL: getCalcTimeRowCell(calcTimeRow_calcThenValidCPMs, "gpu"),
-            },
-          }).calcResult
+          // pfIvLevelsSPsAtCpLimit_gpu = timeTest("getPfIvLevelsSPsAtCpLimit_GPU", {
+          //   fn: getPfIvLevelsSPsAtCpLimit_kernel,
+          //   fnArgs: [testParams.CP_LIMIT, pokeFormsFlat, ivsFlat, cpmsFlat, cpms.length - 1],
+          // }, {
+          //   logResult: false,
+          //   // logResult: true,
+          //   renderPerformance: {
+          //     targetEL: getCalcTimeRowCell(calcTimeRow_calcThenValidCPMs, "gpu"),
+          //   },
+          // }).calcResult
 
           /* SAVE KERNEL TO JSON */
           /* gpuKernel.toJSON() throws error if called before kernel is called */
           // let getCalcThenValidCPMs_kernelJson = getCalcThenValidCPMs_kernel.toJSON()
           // saveAsFile(JSON.stringify(getCalcThenValidCPMs_kernelJson), 'application/json', 'getCalcThenValidCPMs_kernel.json')
 
-          /* CPU */
-          pFIvLevelsSPsAtCpLimit_cpu = timeOperation("getPfIvLevelsSPsAtCpLimit_CPU", {
-            fn: getPfIvLevelsSPsAtCpLimit_CPU,
-            fnArgs: [testParams.CP_LIMIT, pokeForms, ivs, cpms],
-          }, {
-            logResult: false,
-            renderPerformance: {
-              targetEL: getCalcTimeRowCell(calcTimeRow_calcThenValidCPMs, "cpu"),
-            },
-          }).calcResult
+          // /* CPU */
+          // pFIvLevelsSPsAtCpLimit_cpu = timeOperation("getPfIvLevelsSPsAtCpLimit_CPU", {
+          //   fn: getPfIvLevelsSPsAtCpLimit_CPU,
+          //   fnArgs: [testParams.CP_LIMIT, pokeForms, ivs, cpms],
+          // }, {
+          //   logResult: false,
+          //   renderPerformance: {
+          //     targetEL: getCalcTimeRowCell(calcTimeRow_calcThenValidCPMs, "cpu"),
+          //   },
+          // }).calcResult
           //#endregion getPfIvLevelsSPsAtCpLimit_GPU
 
           //#region COMPARE GPU / CPU MAX VALID CPM VALUES
@@ -402,17 +494,32 @@
           //#endregion COMPARE GPU / CPU MAX VALID CPM VALUES
 
           //#region SORT RESULTS
-          
+
 
           /* sort GPU results */
           // timeOperation("sortPfIVsAtCpLimit_GPU results on CPU)", {
           //   // fn: sortIVsAtCpLimit_kernel,
           //   fn: sortPfIVsAtCpLimit_CPU,
-          //   fnArgs: [pfIvLevelsSPsAtCpLimit_gpu, pokeForms, ivs, cpms], /* when pipeline false */
-          //   // fnArgs: [pfIvLevelsSPsAtCpLimit_gpu.toArray(), pokeForms, ivs, cpms], /* when pipeline true */
+          //   // fnArgs: [pfIvLevelsSPsAtCpLimit_gpu, pokeForms, ivs, cpms], /* when pipeline false */
+          //   fnArgs: [pfIvLevelsSPsAtCpLimit_gpu.toArray(), pokeForms, ivs, cpms], /* when pipeline true */
           // }, {
           //   logResult: true,
           //   logAlt: pfIvLevelsSPsAtCpLimit_gpu,
+          //   renderPerformance: {
+          //     /* render in CPU col bc sorting is on CPU */
+          //     targetEL: getCalcTimeRowCell(calcTimeRow_getPfIvLevelsSPs, "gpu"),
+          //   },
+          // }).calcResult
+
+          // timeTest("sortPfIVsAtCpLimit_GPU (gpu oddEvenSort)", {
+          //   // fn: sortIVsAtCpLimit_kernel,
+          //   // fn: gpuOddEvenSort,
+          //   fn: gpuOddEvenSort_kernel,
+          //   fnArgs: [pfIvLevelsSPsAtCpLimit_gpu, testParams.IV_BATCH_SIZE, 1], /* when pipeline false */
+          //   // fnArgs: [pfIvLevelsSPsAtCpLimit_gpu.toArray(), pokeForms, ivs, cpms], /* when pipeline true */
+          // }, {
+          //   logResult: true,
+          //   // logAlt: pfIvLevelsSPsAtCpLimit_gpu,
           //   renderPerformance: {
           //     /* render in CPU col bc sorting is on CPU */
           //     targetEL: getCalcTimeRowCell(calcTimeRow_getPfIvLevelsSPs, "gpu"),
@@ -430,9 +537,35 @@
           //     targetEL: getCalcTimeRowCell(calcTimeRow_getPfIvLevelsSPs, "cpu"),
           //   },
           // });
+
+          timeTest("getAndSortPfIVsAtCpLimit_GPU", {
+            fn: getPfIvLevelsSPsAtCpLimit_gpuOddEvenSort_kernel,
+            fnArgs: [
+              testParams.CP_LIMIT, /* cpLimit */
+              pokeFormsFlat, /* pokeforms */
+              ivsFlat, /* ivs */
+              cpmsFlat, /* cpms */
+              cpms.length - 1, /* lastCpmIdx */
+              testParams.IV_BATCH_SIZE, /* oddEven sort iterations */
+              1 /* spColIdx */
+            ],
+          }, {
+            logResult: true,
+            // logAlt: pfIvLevelsSPsAtCpLimit_gpu,
+            renderPerformance: {
+              targetEL: getCalcTimeRowCell(calcTimeRow_getPfIvLevelsSPs, "gpu"),
+            },
+          }).calcResult
+
+          // performance.mark('gpu_sort')
+          // for (let i = 0; i < testParams.PF_BATCH_SIZE; i++) {
+          //   pfIvLevelsSPsAtCpLimit_gpu = gpuOddEvenSort_evenPhase(gpuOddEvenSort_oddPhase(pfIvLevelsSPsAtCpLimit_gpu, 1), 1)
+          // }
+          // console.log('gpu sort w/ for loop', performance.measure('gpu_sort').duration)
+          // performance.clearMeasures('gpu_sort')
           //#endregion SORT RESULTS
 
-          
+
           //#endregion CPU CALCS
           //#endregion GPU CALCS
           //#endregion RUN CALCS / PERF TESTS
@@ -451,17 +584,19 @@
 
     //#region FUNCTION DEFINITIONS
     //#region HELPER FUNCTIONS
-    function importPokeGenieFile(e){
+    function importPokeGenieFile(e) {
       // objectUrl = URL.createObjectURL(e.target.files[0])
-      Papa.parse(e.target.files[0], {complete: csv => {
-        pgHeaders = csv.data[0]
-        pgData = csv.data.slice(1)
-        console.log("pgHeaders:", pgHeaders)
-        console.log("pgData:", pgData)
-        let p = document.createElement('p')
-        p.innerHTML = JSON.stringify(pgHeaders)
-        document.body.appendChild(p)
-      }})
+      Papa.parse(e.target.files[0], {
+        complete: csv => {
+          pgHeaders = csv.data[0]
+          pgData = csv.data.slice(1)
+          console.log("pgHeaders:", pgHeaders)
+          console.log("pgData:", pgData)
+          let p = document.createElement('p')
+          p.innerHTML = JSON.stringify(pgHeaders)
+          document.body.appendChild(p)
+        }
+      })
     }
     function getPokeForms(filePath, options) {
       /* CANNOT USE ASYNC/AWAIT BECAUSE 'parse' FUNCTION RETURNS 'void'.
@@ -566,7 +701,7 @@
       // return document.querySelector(`table#performance tr#${rowId} > td:nth-child(${idx[col]})`)
       return rowEl.children[idx[colName]];
     }
-    function timeOperation(calcName, calc, options) {
+    function timeTest(calcName, calc, options) {
       // let { useWorker, silentRun, logPerformance, logResult } = options
       // {targetEl, appendToEl, appendChildToEl}
       if (!options?.silentRun)
@@ -968,7 +1103,8 @@
       const sp = Math.round(A * D * hp);
       // return [cpms[cpmIdx][0], cp, A, sp] /* return [level, cp Atk, sp] */
       // return [pfIdx, ivIdx, cpms[cpmIdx][1], sp] /* return [pfIdx, ivIdx, cpm@cpLimit, sp] so that entries can be identified after sorting */
-      return [ivIdx, cpmIdx, sp] /* return [ivIdx, cpmIdx, sp] so that entries can be identified after sorting */
+      // return [ivIdx, cpmIdx, sp] /* return [ivIdx, cpmIdx, sp] so that entries can be identified after sorting */
+      return [ivIdx, sp, cp, A] /* return [ivIdx, sp, cp, A] so that entries can be identified after sorting, and so sorting on gpu doesn't need to perform lookups (since it already has cp and Atk for tie-breaking) */
     }
     function sortPfIVsAtCpLimit_GPU(pfIvLevelsSP, pokeforms, ivs, cpms) {
       /* currently will not run due to unknown identifiers -> probably 'outputX' and 'result' */
@@ -1021,6 +1157,99 @@
       return this.result[y][x]
       //  done = false
       //  while (!done) {}
+    }
+    function gpuOddEvenSort(input, n, spColIdx) {
+      let result = k2(k1(input, spColIdx), spColIdx)
+      for (let i = 0; i < n - 1; i++) {
+        result = k2(k1(result, spColIdx), spColIdx)
+      }
+      return result;
+    }
+    // function gpuOddEvenSort_oddPhase(input, spIdx, cpIdx, AtkIdx) {
+    function gpuOddEvenSort_oddPhase(input, spColIdx) {
+      // debugger
+      // let { y: pfIdx, x: el1Idx } = this.thread
+      let { y, x } = this.thread
+      // let isIv1IdxEven = iv1Idx % 2 == 0
+      /* if iv1Idx is odd iv2Idx is iv1Idx - 1 
+         if iv1Idx is odd iv2Idx is iv1Idx + 1 
+         Can't use the inverse bc '& 0' to check even always returns 0 */
+      // let el2Idx = el1Idx - (el1Idx & 1 || -1)
+      // let el2Idx = 0
+      // if (el1Idx % 2 == 0) el2Idx = el1Idx + 1
+      // else el2Idx = el1Idx - 1
+
+      // let sp2 = input[pfIdx]
+      return input[y][x]
+      // if (sp2 < 0) return input[pfIdx][el1Idx]
+
+      // let sp1 = input[pfIdx][el1Idx][spColIdx]
+      // return sp1
+      // // let resultIdx = iv1Idx
+      // if (isIv1IdxEven) {
+      //   if (sp2 > sp1) return input[pfIdx][el2Idx]
+      //   else return input[pfIdx][el1Idx]
+      // }
+      // else { /* iv1Idx is ODD */
+      //   if (sp2 < sp1) return input[pfIdx][el2Idx]
+      //   else return input[pfIdx][el1Idx]
+      // }
+      // el2Idx = el1Idx - 1
+      // if (input[pfIdx][el2Idx]) {
+      //   resultIdx = input[pfIdx][el1Idx][spColIdx] < input[pfIdx][el2Idx][spColIdx] ? el1Idx : el2Idx
+      // }
+      // // return input[pfIdx][resultIdx ?? iv1Idx]
+      // return input[pfIdx][resultIdx]
+    }
+    function gpuOddEvenSort_evenPhase(input, spColIdx) {
+      let { y: pfIdx, x: iv1Idx } = this.thread
+      return input[pfIdx][iv1Idx]
+      // return input[pfIdx][iv1Idx]
+      // let iv2Idx = iv1Idx + 1
+      // let resultIdx = iv1Idx
+      // if (iv1Idx & 1 && input[pfIdx][iv2Idx]) {
+      //   resultIdx = input[pfIdx][iv1Idx][spColIdx] > input[pfIdx][iv2Idx][spColIdx] ? iv1Idx : iv2Idx
+      // }
+      // iv2Idx = iv1Idx - 1
+      // if (input[pfIdx][iv2Idx]) {
+      //   resultIdx = input[pfIdx][iv1Idx][spColIdx] < input[pfIdx][iv2Idx][spColIdx] ? iv1Idx : iv2Idx
+      // }
+      // // return input[pfIdx][resultIdx ?? iv1Idx]
+      // return input[pfIdx][resultIdx]
+    }
+
+
+    function oddEvenSort_js(input, n) {
+      /* https://www.geeksforgeeks.org/odd-even-sort-brick-sort/ */
+      // let { y: pfIdx, x: ivIdx } = this.thread
+      let isSorted = false;
+
+      while (!isSorted) {
+        isSorted = true;
+        let temp = 0;
+
+        // Perform Bubble sort on odd indexed element
+        for (let i = 1; i <= n - 2; i = i + 2) {
+          if (input[i] > input[i + 1]) {
+            temp = input[i];
+            input[i] = input[i + 1];
+            input[i + 1] = temp;
+            isSorted = false;
+          }
+        }
+
+        // Perform Bubble sort on even indexed element
+        for (let i = 0; i <= n - 2; i = i + 2) {
+          if (input[i] > input[i + 1]) {
+            temp = input[i];
+            input[i] = input[i + 1];
+            input[i + 1] = temp;
+            isSorted = false;
+          }
+        }
+      }
+
+      return;
     }
     //#endregion GPU CALCS
     //#endregion FUNCTION DEFINITIONS
