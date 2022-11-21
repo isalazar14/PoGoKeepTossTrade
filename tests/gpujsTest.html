@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- prettier-ignore -->
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <!-- CSS only -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+  <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous" defer></script> -->
+  <style type="text/css">
+    body {
+      padding-bottom: 20px;
+    }
+
+    #content {
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 20px;
+    }
+
+    table {
+      max-width: 450px;
+      background-color: cornflowerblue;
+      color: black;
+    }
+
+    table#gpuSupport tr.notSupported {
+      background-color: slategrey;
+      color: yellow;
+    }
+
+    th,
+    td {
+      /* first column */
+      padding: 0px 15px;
+      text-align: center;
+    }
+
+    table td:first-child {
+      /* second column */
+      text-align: left;
+    }
+
+    #calcStatus {
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <noscript>javascript not enabled/supported, can't run calculations</noscript>
+  <!-- prettier-ignore -->
+  <div id="content">
+    <p id='timeNow'></p>
+    <p id="cpuCores"></p>
+    <input type="file" name="" id="file-input" onchange="importPokeGenieFile(event)">
+    <table id="settings">
+      <h2>Test Settings</h2>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>PF batch size</td>
+          <td id="pf-batch-size" contenteditable="true"></td>
+        </tr>
+        <tr>
+          <td>IV batch size</td>
+          <td id="iv-batch-size" contenteditable="true"></td>
+        </tr>
+        <tr>
+          <td>CP limit</td>
+          <td id="cp-limit" contenteditable="true"></td>
+        </tr>
+        <tr>
+          <td>IV Floor</td>
+          <td id="iv-floor" contenteditable="true"></td>
+        </tr>
+        <tr>
+          <td>Max level</td>
+          <td id="max-level" contenteditable="true"></td>
+        </tr>
+        <tr>
+          <td>Target Levels</td>
+          <td id="target-levels" contenteditable="true"></td>
+        </tr>
+      </tbody>
+    </table>
+    <table id="performance">
+      <h2>Performance (ms)</h2>
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>CPU</th>
+          <th>GPU</th>
+          <th>GPU<br><small>(CPU fallback)</small></th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- <tr id="maxCalcCPMs">
+          <td>Max calc CPMs</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr id="maxValidCPMs">
+          <td>Max valid CPMs<br><small>Level at CP limit</small></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr id="stats">
+          <td>Calculate stats<br><small>(CP, HP, Atk, Def, SP)</small></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr> -->
+        <tr id="calcThenValidCPMs">
+          <td>calc & valid CPMs<br><small>(+ CP, HP, SP)</small></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr id="sortSPs">
+          <td>Sort SPs</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr id="spPercent">
+          <td>Calculate SP%</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="d-flex justify-content-center" id="calcStatus">
+      <button id="startBtn" onclick="runTest()" class="btn btn-success">Start</button>
+      <div class="spinner-border" role="status" hidden></div>
+      <p id="errorP" hidden>Error</p>
+    </div>
+    <table id="gpuSupport">
+      <h2>GPU Support</h2>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tr>
+        <td>GPU</td>
+        <td id="gpu"></td>
+      </tr>
+      <tr>
+        <td>Kernel Map</td>
+        <td id="kernel-map"></td>
+      </tr>
+      <tr>
+        <td>Offscreen Canvas</td>
+        <td id="offscreen-canvas"></td>
+      </tr>
+      <tr>
+        <td>WebGL</td>
+        <td id="webgl"></td>
+      </tr>
+      <tr>
+        <td>WebGL 2</td>
+        <td id="webgl2"></td>
+      </tr>
+      <tr>
+        <td>Headless GL</td>
+        <td id="headlessgl"></td>
+      </tr>
+      <tr>
+        <td>Canvas</td>
+        <td id="canvas"></td>
+      </tr>
+      <tr>
+        <td>GPU HTML Image Array</td>
+        <td id="gpu-html-image-array"></td>
+      </tr>
+      <tr>
+        <td>Single Precision</td>
+        <td id="single-precision"></td>
+      </tr>
+      <tbody>
+      </tbody>
+    </table>
+    <div id="results"></div>
+  </div>
+
+  <!-- <script type="text/javascript">
+    document.body.append('HELLO FROM SCRIPT')
+  </script> -->
+  <script src="https://unpkg.com/gpu.js@latest/dist/gpu-browser.js"></script>
+  <script src="https://unpkg.com/papaparse@5.3.0/papaparse.min.js"></script>
+  <!-- <script src="./gpujsTestHelpers.js" type="module" crossorigin="anonymous"></script>
+  <script src="./pokeCalcHelpers.js" type="module" crossorigin="anonymous"></script>
+  <script src="./pokeCalcsCPU.js" type="module" crossorigin="anonymous"></script>
+  <script src="./pokeCalcsGPU.js" type="module" crossorigin="anonymous"></script>
+  <script src="./gpujsTest.js" type="module" crossorigin="anonymous"></script> -->
+  <!-- <script src="/js/gpujsTest.js" type="module" crossorigin="anonymous"></script> -->
+  <script>
+    // GPU is a constructor and namespace for browser
+    // declare const getCorrectCpms // from "./cpmConverter";, loaded in html
+    /* for running WITH bundler (e.g. react app)
+        Use import module syntax  */
+    // import { GPU, Input } from "gpu.js"
+    // import { parse } from "papaparse";
+    // import getCorrectCpms from "./cpmConverter";
+
+
+    // onmessage = (e) =>{
+    //   const [gpuG, gpuC] = e.data
+    // postMessage("in gpujsTestWorker.js")
+    //#region INIT + GLOBAL VARS
+    // console.log("running gpuTest");
+    // displayHardwareSupport();
+    let testParams = {
+      PF_BATCH_SIZE: 0 /* 0 = no limit */,
+      IV_BATCH_SIZE: 0 /* 0 = no limit */,
+      IV_FLOOR: 0,
+      CP_LIMIT: 1500,
+      MAX_LEVEL: 40,
+      TARGET_LEVELS: [30, 40, 41],
+      DEFAULT_PF_BATCH_SIZE: 730,
+      DEFAULT_IV_BATCH_SIZE: 4096,
+      POKEFORMS_CSV_LOCATION_URL:
+        // "http://localhost:8000/data/pokemon_forms.csv" // expressServer:
+        // "http://localhost:5500/client/src/data/csv/pokemon_forms.csv" // liveServer
+        "pokemon_forms.csv",
+    };
+    console.log(testParams);
+    let parseOptions = {
+      /* USE ZERO OR ONE OPTION */
+      // preview: testParams.PF_BATCH_SIZE,
+      /* [start, end] end-inclusive */
+      // pIdRange: [3, 3],
+      /* "pId, fId" */
+      // pfSelection: [
+      //   "3,1",
+      //   "6,1",
+      //   "9,1"
+      // ],
+    };
+    if (!testParams.PF_BATCH_SIZE) testParams.PF_BATCH_SIZE = testParams.DEFAULT_PF_BATCH_SIZE
+    if (parseOptions.pIdRange) testParams.PF_BATCH_SIZE = parseOptions.pIdRange[1] - parseOptions.pIdRange[0] + 1
+    if (parseOptions.pfSelection) testParams.PF_BATCH_SIZE = parseOptions.pfSelection.length
+
+    let ivs = createIvMatrix(testParams.IV_FLOOR);
+    if (testParams.IV_FLOOR > 0) testParams.IV_BATCH_SIZE = Math.pow((16 - testParams.IV_FLOOR), 3);
+    if (testParams.IV_BATCH_SIZE > 0) ivs = ivs.slice(0, testParams.IV_BATCH_SIZE);
+
+    const settingsTable = document.querySelector("table#settings");
+    settingsTable.querySelector("#pf-batch-size").innerHTML = testParams.PF_BATCH_SIZE || "?";
+    settingsTable.querySelector("#iv-batch-size").innerHTML = testParams.IV_BATCH_SIZE || testParams.DEFAULT_IV_BATCH_SIZE.toString();
+    settingsTable.querySelector("#cp-limit").innerHTML = testParams.CP_LIMIT.toString();
+    settingsTable.querySelector("#iv-floor").innerHTML = testParams.IV_FLOOR.toString();
+    settingsTable.querySelector("#max-level").innerHTML = testParams.MAX_LEVEL.toString();
+    settingsTable.querySelector("#target-levels").innerHTML = testParams.TARGET_LEVELS.toString();
+    /* show settings table */
+    // document.querySelector("table#settings").removeAttribute("hidden");
+    /* SHOW PERFORMANCE TABLE */
+    // document.querySelector("table#performance").removeAttribute("hidden");
+
+    const calcStatusDiv = document.querySelector("#calcStatus");
+    const startBtn = calcStatusDiv?.querySelector("#startBtn")
+    const testActiveSpinner = calcStatusDiv?.querySelector(".spinner-border")
+
+
+
+    // console.log(ivs)
+    // prettier-ignore
+    const gmCPMs = [0.094, 0.16639787, 0.21573247, 0.25572005, 0.29024988, 0.3210876, 0.34921268, 0.3752356, 0.39956728, 0.4225, 0.44310755, 0.4627984, 0.48168495, 0.49985844, 0.51739395, 0.5343543, 0.5507927, 0.5667545, 0.5822789, 0.5974, 0.6121573, 0.6265671, 0.64065295, 0.65443563, 0.667934, 0.6811649, 0.69414365, 0.7068842, 0.7193991, 0.7317, 0.7377695, 0.74378943, 0.74976104, 0.7556855, 0.76156384, 0.76739717, 0.7731865, 0.77893275, 0.784637, 0.7903, 0.7953, 0.8003, 0.8053, 0.8103, 0.8153, 0.8203, 0.8253, 0.8303, 0.8353, 0.8403, 0.8453];
+    let cpms = getFullCpmList(gmCPMs, "df");
+    let maxLevelIdx = testParams.MAX_LEVEL * 2 - 2;
+    let cpmLengthAtMaxLevel = maxLevelIdx + 1;
+    cpms = cpms.slice(0, cpmLengthAtMaxLevel);
+    // console.log(cpmsFloatArray)
+
+
+    //#region CREATE GPU KERNELS
+    const gpuG = new GPU({ mode: "gpu" });
+    // const gpuC = new GPU({ mode: "cpu" });
+
+    const warmup_kernel = gpuG.createKernel(function () {
+      // const {x, y} = this.thread
+      return 0
+    }, {
+      output: [1000, 5000],
+      pipeline: true,
+      immutable: true
+    })
+
+    const getPfIvLevelsSPsAtCpLimit_kernel = createKernel(gpuG, getPfIvLevelsSPsAtCpLimit_GPU, {
+      output: [
+        testParams.IV_BATCH_SIZE || testParams.DEFAULT_IV_BATCH_SIZE,
+        testParams.PF_BATCH_SIZE || testParams.DEFAULT_PF_BATCH_SIZE
+      ],
+      // pipeline: true,
+      // optimizeFLoatMemory: true,
+      // tactic: "precision",
+      // tactic: "speed",
+      // fixIntegerDivisionAccuracy: true,
+      // immutable: true
+    });
+
+    // const sortPfIVsAtCpLimit_kernel = createKernel(gpuG, sortPfIVsAtCpLimit_GPU, {
+    //   output: [
+    //     testParams.IV_BATCH_SIZE || testParams.DEFAULT_IV_BATCH_SIZE,
+    //     testParams.PF_BATCH_SIZE || testParams.DEFAULT_PF_BATCH_SIZE
+    //   ],
+    //   // pipeline: true,
+    //   // optimizeFLoatMemory: true,
+    //   // tactic: "precision",
+    //   // tactic: "speed",
+    //   // fixIntegerDivisionAccuracy: true
+    // });
+    // console.log(sortPfIVsAtCpLimit_kernel.toJSON())
+    /* LOADING KERNEL FROM JSON MAY REDUCE KERNEL STARTUP TIME, BUT THREW ERRORS I COULD NOT RESOLVE */
+
+    const gpuOddEvenSort_oddPhase_kernel = createKernel(gpuG, gpuOddEvenSort_oddPhase, {
+      output: [
+        testParams.IV_BATCH_SIZE || testParams.DEFAULT_IV_BATCH_SIZE,
+        testParams.PF_BATCH_SIZE || testParams.DEFAULT_PF_BATCH_SIZE
+      ],
+      // pipeline: true,
+      // optimizeFLoatMemory: true,
+      // tactic: "precision",
+      // tactic: "speed",
+      // fixIntegerDivisionAccuracy: true
+    });
+
+    const gpuOddEvenSort_evenPhase_kernel = createKernel(gpuG, gpuOddEvenSort_evenPhase, {
+      output: [
+        testParams.IV_BATCH_SIZE || testParams.DEFAULT_IV_BATCH_SIZE,
+        testParams.PF_BATCH_SIZE || testParams.DEFAULT_PF_BATCH_SIZE
+      ],
+      // pipeline: true,
+      // optimizeFLoatMemory: true,
+      // tactic: "precision",
+      // tactic: "speed",
+      // fixIntegerDivisionAccuracy: true
+    });
+
+    const gpuOddEvenSort_kernel = gpuG.combineKernels(
+      gpuOddEvenSort_oddPhase_kernel,
+      gpuOddEvenSort_evenPhase_kernel,
+      function (input, n, spIdx) {
+        result = gpuOddEvenSort_evenPhase_kernel(gpuOddEvenSort_oddPhase_kernel(input, spIdx), spIdx)
+        for (let i = 1; i < n; i++) {
+          let result = gpuOddEvenSort_evenPhase_kernel(gpuOddEvenSort_oddPhase_kernel(result, spIdx), spIdx)
+        }
+        return result;
+      }
+    )
+
+    const getPfIvLevelsSPsAtCpLimit_gpuOddEvenSort_kernel = gpuG.combineKernels(
+      getPfIvLevelsSPsAtCpLimit_kernel,
+      gpuOddEvenSort_oddPhase_kernel,
+      gpuOddEvenSort_evenPhase_kernel,
+      function (cpLimit, pokeForms, ivs, cpms, lastCpmIdx, n, spIdx) {
+        result = gpuOddEvenSort_evenPhase_kernel(
+          gpuOddEvenSort_oddPhase_kernel(
+            getPfIvLevelsSPsAtCpLimit_kernel(cpLimit, pokeForms, ivs, cpms, lastCpmIdx), spIdx), spIdx)
+        for (let i = 0; i < n; i++) {
+          let result = gpuOddEvenSort_evenPhase_kernel(gpuOddEvenSort_oddPhase_kernel(result, spIdx), spIdx)
+        }
+        return result;
+      }
+    )
+
+    // const add = gpuG.createKernel(function (a, b) {
+    //   return a[this.thread.x] + b[this.thread.x];
+    // }).setOutput([2]);
+
+    // const multiply = gpuG.createKernel(function (a, b) {
+    //   return a[this.thread.x] * b[this.thread.x];
+    // }).setOutput([2]);
+
+    // const superKernel = gpuG.combineKernels(add, multiply, function (a, b, c) {
+    //   // return multiply(add(a, b), c);
+    //   return [0]
+    // });
+
+    // console.log(superKernel([2,5], [3,6], [4,7]))
+
+    // const oddEvenSortIteration_kernel = gpuG.combineKernels(
+    //   // add,multiply,
+    //   gpuOddEvenSort_oddPhase_kernel,
+    //   gpuOddEvenSort_evenPhase_kernel,
+    //   function (input, spIdx) {
+    //     // let { x: pfIdx } = this.thread
+    //     return gpuOddEvenSort_evenPhase_kernel(gpuOddEvenSort_oddPhase_kernel(input, spIdx), spIdx)
+    //     // return this.thread.x + this.thread.y
+    //   }
+    // )
+
+    // console.log('warming up gpu')
+    // performance.mark('gpu_warmup')
+    // let warmupResults = warmup_kernel()
+    // // warmupResults.delete()
+    // console.log('gpu warmup duration (ms)', performance.measure('gpu_warmup').duration)
+    //#endregion CREATE GPU KERNELS
+
+    const calcTimeRow_calcThenValidCPMs = document.querySelector("tr#calcThenValidCPMs"),
+      calcTimeRow_getPfIvLevelsSPs = document.querySelector("tr#sortSPs"),
+      calcTimeRow_sortSPs = document.querySelector("tr#spPercent");
+
+    let pokeForms, pfHeaders,
+      pFIvLevelsSPsAtCpLimit_cpu,
+      pFIvLevelsSPsAtCpLimit_gpu,
+      pgHeaders,
+      pgData
+
+    //#endregion INIT + GLOBAL VARS
+
+    //#region TEST
+    function runTest() {
+      /* SHOW CALC STATUS SPINNER*/
+      startBtn?.toggleAttribute("hidden");
+      testActiveSpinner?.toggleAttribute("hidden");
+      getPokeForms(testParams.POKEFORMS_CSV_LOCATION_URL, parseOptions)
+        .then((csv) => {
+          pfHeaders = csv.headers
+          pokeForms = csv.data
+
+          if (testParams.PF_BATCH_SIZE != pokeForms.length)
+            testParams.PF_BATCH_SIZE = pokeForms.length;
+
+
+          //#region RUN CALCS / PERF TESTS
+          // prettier-ignore
+          let pokeFormsFlat = GPU.input(pokeForms.flat(), [pokeForms[0].length, pokeForms.length]);
+          // prettier-ignore
+          let ivsFlat = GPU.input(ivs.flat(), [ivs[0].length, ivs.length]);
+          // prettier-ignore
+          let cpmsFlat = GPU.input(cpms.flat(), [cpms[0].length, cpms.length]);
+          console.log("~~~ calcCpmsAtCpLimit ~~~");
+          /* SET CURRENT TEST CELL AS ACTIVE AND SHOW SPINNER */
+
+          /* NOTE TO SELF: HANDLE SHADOW MONS */
+          //#region CPU CALCS
+          //#region getPfIvLevelsSPsAtCpLimit_GPU
+
+          /* GPU */
+          // pfIvLevelsSPsAtCpLimit_gpu = timeTest("getPfIvLevelsSPsAtCpLimit_GPU", {
+          //   fn: getPfIvLevelsSPsAtCpLimit_kernel,
+          //   fnArgs: [testParams.CP_LIMIT, pokeFormsFlat, ivsFlat, cpmsFlat, cpms.length - 1],
+          // }, {
+          //   logResult: false,
+          //   // logResult: true,
+          //   renderPerformance: {
+          //     targetEL: getCalcTimeRowCell(calcTimeRow_calcThenValidCPMs, "gpu"),
+          //   },
+          // }).calcResult
+
+          /* SAVE KERNEL TO JSON */
+          /* gpuKernel.toJSON() throws error if called before kernel is called */
+          // let getCalcThenValidCPMs_kernelJson = getCalcThenValidCPMs_kernel.toJSON()
+          // saveAsFile(JSON.stringify(getCalcThenValidCPMs_kernelJson), 'application/json', 'getCalcThenValidCPMs_kernel.json')
+
+          // /* CPU */
+          // pFIvLevelsSPsAtCpLimit_cpu = timeOperation("getPfIvLevelsSPsAtCpLimit_CPU", {
+          //   fn: getPfIvLevelsSPsAtCpLimit_CPU,
+          //   fnArgs: [testParams.CP_LIMIT, pokeForms, ivs, cpms],
+          // }, {
+          //   logResult: false,
+          //   renderPerformance: {
+          //     targetEL: getCalcTimeRowCell(calcTimeRow_calcThenValidCPMs, "cpu"),
+          //   },
+          // }).calcResult
+          //#endregion getPfIvLevelsSPsAtCpLimit_GPU
+
+          //#region COMPARE GPU / CPU MAX VALID CPM VALUES
+          // compareCpuGpuResults_IvLevelsSPsAtCpLimit(ivLevelsSPsAtCpLimit_cpu, ivLevelsSPsAtCpLimit_gpu)
+
+          //#endregion COMPARE GPU / CPU MAX VALID CPM VALUES
+
+          //#region SORT RESULTS
+
+
+          /* sort GPU results */
+          // timeOperation("sortPfIVsAtCpLimit_GPU results on CPU)", {
+          //   // fn: sortIVsAtCpLimit_kernel,
+          //   fn: sortPfIVsAtCpLimit_CPU,
+          //   // fnArgs: [pfIvLevelsSPsAtCpLimit_gpu, pokeForms, ivs, cpms], /* when pipeline false */
+          //   fnArgs: [pfIvLevelsSPsAtCpLimit_gpu.toArray(), pokeForms, ivs, cpms], /* when pipeline true */
+          // }, {
+          //   logResult: true,
+          //   logAlt: pfIvLevelsSPsAtCpLimit_gpu,
+          //   renderPerformance: {
+          //     /* render in CPU col bc sorting is on CPU */
+          //     targetEL: getCalcTimeRowCell(calcTimeRow_getPfIvLevelsSPs, "gpu"),
+          //   },
+          // }).calcResult
+
+          // timeTest("sortPfIVsAtCpLimit_GPU (gpu oddEvenSort)", {
+          //   // fn: sortIVsAtCpLimit_kernel,
+          //   // fn: gpuOddEvenSort,
+          //   fn: gpuOddEvenSort_kernel,
+          //   fnArgs: [pfIvLevelsSPsAtCpLimit_gpu, testParams.IV_BATCH_SIZE, 1], /* when pipeline false */
+          //   // fnArgs: [pfIvLevelsSPsAtCpLimit_gpu.toArray(), pokeForms, ivs, cpms], /* when pipeline true */
+          // }, {
+          //   logResult: true,
+          //   // logAlt: pfIvLevelsSPsAtCpLimit_gpu,
+          //   renderPerformance: {
+          //     /* render in CPU col bc sorting is on CPU */
+          //     targetEL: getCalcTimeRowCell(calcTimeRow_getPfIvLevelsSPs, "gpu"),
+          //   },
+          // }).calcResult
+
+          // /* sort CPU results */
+          // timeOperation("sortPfIVsAtCpLimit_CPU", {
+          //   fn: sortPfIVsAtCpLimit_CPU,
+          //   fnArgs: [pFIvLevelsSPsAtCpLimit_cpu, pokeForms, ivs, cpms],
+          // }, {
+          //   logResult: true,
+          //   logAlt: pFIvLevelsSPsAtCpLimit_cpu,
+          //   renderPerformance: {
+          //     targetEL: getCalcTimeRowCell(calcTimeRow_getPfIvLevelsSPs, "cpu"),
+          //   },
+          // });
+
+          timeTest("getAndSortPfIVsAtCpLimit_GPU", {
+            fn: getPfIvLevelsSPsAtCpLimit_gpuOddEvenSort_kernel,
+            fnArgs: [
+              testParams.CP_LIMIT, /* cpLimit */
+              pokeFormsFlat, /* pokeforms */
+              ivsFlat, /* ivs */
+              cpmsFlat, /* cpms */
+              cpms.length - 1, /* lastCpmIdx */
+              testParams.IV_BATCH_SIZE, /* oddEven sort iterations */
+              1 /* spColIdx */
+            ],
+          }, {
+            logResult: true,
+            // logAlt: pfIvLevelsSPsAtCpLimit_gpu,
+            renderPerformance: {
+              targetEL: getCalcTimeRowCell(calcTimeRow_getPfIvLevelsSPs, "gpu"),
+            },
+          }).calcResult
+
+          // performance.mark('gpu_sort')
+          // for (let i = 0; i < testParams.PF_BATCH_SIZE; i++) {
+          //   pfIvLevelsSPsAtCpLimit_gpu = gpuOddEvenSort_evenPhase(gpuOddEvenSort_oddPhase(pfIvLevelsSPsAtCpLimit_gpu, 1), 1)
+          // }
+          // console.log('gpu sort w/ for loop', performance.measure('gpu_sort').duration)
+          // performance.clearMeasures('gpu_sort')
+          //#endregion SORT RESULTS
+
+
+          //#endregion CPU CALCS
+          //#endregion GPU CALCS
+          //#endregion RUN CALCS / PERF TESTS
+
+          startBtn.innerHTML = "Run Again"
+          testActiveSpinner.toggleAttribute('hidden')
+          startBtn.toggleAttribute('hidden')
+        }).catch(err => {
+          let errorP = calcStatusDiv.querySelector('#errorP')
+          testActiveSpinner.toggleAttribute('hidden')
+          errorP.toggleAttribute('hidden')
+          throw err
+        })
+    }
+    //#endregion TEST
+
+    //#region FUNCTION DEFINITIONS
+    //#region HELPER FUNCTIONS
+    function importPokeGenieFile(e) {
+      // objectUrl = URL.createObjectURL(e.target.files[0])
+      Papa.parse(e.target.files[0], {
+        complete: csv => {
+          pgHeaders = csv.data[0]
+          pgData = csv.data.slice(1)
+          console.log("pgHeaders:", pgHeaders)
+          console.log("pgData:", pgData)
+          let p = document.createElement('p')
+          p.innerHTML = JSON.stringify(pgHeaders)
+          document.body.appendChild(p)
+        }
+      })
+    }
+    function getPokeForms(filePath, options) {
+      /* CANNOT USE ASYNC/AWAIT BECAUSE 'parse' FUNCTION RETURNS 'void'.
+      MUST USE 'complete' CALLBACK */
+      if ((options?.pIdRange && options?.pfSelection) ||
+        (options?.pIdRange && options?.preview) ||
+        (options?.preview && options?.pfSelection))
+        throw new Error("Cannot use more than one option at a time");
+      return new Promise((resolve, reject) => {
+        Papa.parse(filePath, {
+          download: true,
+          // header: true, // will turn results into objects with headers (from results 1st row) as properties
+          dynamicTyping: true,
+          skipEmptyLines: true,
+          preview: options?.preview ? options.preview + 1 : 0,
+          complete: (parseResults) => {
+            /* First row is headers */
+            let [headers] = parseResults.data;
+            /* Remaining rows are pokeforms */
+            let [, ...data] = parseResults.data;
+            let result = { headers, data };
+            // if (options?.preview) {
+            //   /* no options OR preview option set -> pass through results */
+            //   result.data = parseResults.data;
+            // } else 
+            if (options?.pIdRange) {
+              /* range option set -> get all rows with matching pId, including multiple forms */
+              result.data = data.filter((pf) => pf[0] >= options.pIdRange[0] && pf[0] <= options.pIdRange[1]);
+            }
+            else if (options?.pfSelection) {
+              /* selection option set -> get all rows with matching [pId, fId] */
+              let selection = options.pfSelection.reduce((map, pf, i) => map.set(pf, true), new Map());
+              let rowCount = parseResults.data.length;
+              let remaining = options.pfSelection.length;
+              let i = 0;
+              let filteredPFs = [];
+              while (remaining > 0 && i < rowCount) {
+                if (selection.has(`${data[i][0]},${data[i][1]}`)) {
+                  filteredPFs.push(data[i]);
+                  remaining--;
+                }
+                i++;
+              }
+              result.data = filteredPFs;
+            }
+            resolve(result);
+            return;
+          },
+          error: (error) => reject(error),
+        });
+      });
+    }
+    function displayHardwareSupport() {
+      /* adding gpu features table to DOM */
+      let timeEl = document.querySelector("#timeNow");
+      if (timeEl != undefined) {
+        timeEl.innerHTML = new Date().toLocaleTimeString();
+        setInterval(() => {
+          timeEl.innerHTML = new Date().toLocaleTimeString();
+        }, 1000);
+      }
+      let cpuEl = document.querySelector("#cpuCores");
+      if (cpuEl != undefined) {
+        cpuEl.innerHTML = `CPU, total threads: ${navigator.hardwareConcurrency}`;
+      }
+      const gpuFeatures = [
+        "GPU",
+        "Kernel Map",
+        "Offscreen Canvas",
+        "WebGL",
+        "WebGL 2",
+        "Headless GL",
+        "Canvas",
+        "GPU HTML Image Array",
+        "Single Precision",
+      ];
+      const gpuSupportTableBody = document.querySelector("table#gpuSupport>tbody");
+      // gpuFeatures.forEach(f=>console.log(f, GPU[f]));
+      gpuFeatures.forEach((f, i) => {
+        let row = gpuSupportTableBody.children.item(i);
+        let cell = row.children.item(1)
+        let featureGetter = `is${f.split(" ").join("")}Supported`;
+        let isSupported = GPU[featureGetter];
+        if (!isSupported)
+          row.classList.add("notSupported");
+        cell.innerHTML = isSupported;
+        // row.innerHTML = `<td>${f}</td><td>${isSupported}</td>`;
+        // document.querySelector("table#gpuSupport > tbody")?.appendChild(row);
+        // gpuSupportTable?.querySelector("tbody")?.appendChild(row);
+        // gpuSupportTable?.removeAttribute("hidden");
+      });
+    }
+    function addCalcTimeRow(operation) {
+      const calcTimeRow = document.createElement("tr");
+      calcTimeRow.innerHTML = `<td>${operation}</td>  <td></td> <td></td> <td></td>`;
+      calcTimeRow.id = operation.toLowerCase().split(" ").join("-");
+      const calcTimeTableBody = document.querySelector("table#performance > tbody");
+      return calcTimeTableBody.appendChild(calcTimeRow);
+    }
+    function getCalcTimeRowCell(rowEl, colName) {
+      let idx = { cpu: 1, gpu: 2, gpuCpu: 3 };
+      // return document.querySelector(`table#performance tr#${rowId} > td:nth-child(${idx[col]})`)
+      return rowEl.children[idx[colName]];
+    }
+    function timeTest(calcName, calc, options) {
+      // let { useWorker, silentRun, logPerformance, logResult } = options
+      // {targetEl, appendToEl, appendChildToEl}
+      if (!options?.silentRun)
+        console.log(`%cRunning ${calcName}`, "background-color:cornflowerblue;");
+      if (options?.renderPerformance != undefined) {
+        if (options.renderPerformance) {
+          options.renderPerformance.targetEL.classList.toggle("running-calc");
+          // prettire-ignore
+          options.renderPerformance.targetEL.innerHTML = `<div class="d-flex justify-content-center">
+                                                          <div class="spinner-border spinner-border-sm" role="status"></div>
+                                                        </div>`;
+          if (options.renderPerformance.appendToEl)
+            options.renderPerformance.appendToEl.append(options.renderPerformance.targetEL);
+          else if (options.renderPerformance.appendChildToEl)
+            options.renderPerformance.appendChildToEl.appendChild(options.renderPerformance.targetEL);
+        }
+      }
+      let t0 = performance.now();
+      let calcResult = calc.fn.apply(null, calc.fnArgs);
+      let t1 = performance.now();
+      let dt = t1 - t0
+      if (options != undefined) {
+        if (!(options.logPerformance == false)) {
+          console.log(`${calcName} duration: ${Math.round(dt).toLocaleString()} ms`);
+        }
+        if (!options.logResult || !(options.logResult == false))
+          /* Log calc result by default. Explicitly disable */
+          console.log(`${calcName} result:\n`, calcResult);
+        if (options.logAlt)
+          console.log(`${calcName} alt result:\n`, options.logAlt);
+        if (options.renderPerformance) {
+          /* Do not render performance by default */
+          options.renderPerformance.targetEL.innerHTML = Math.round(dt).toLocaleString();
+          options.renderPerformance.targetEL.classList.toggle("running-calc");
+        }
+      }
+      if (!options?.silentRun)
+        console.info(`%cFinished ${calcName}`, "background-color:orange; color:black");
+      return { calcResult, dt };
+    }
+    function getFullCpmList(floatCPMs, resultType = "df") {
+      // if (floatCPMs.length == 0) {console.error("floatCpms array is empty"); return}
+      const trueCpms = new Float32Array(floatCPMs);
+      const maxLevel = trueCpms.length;
+      const totalCpmCount = trueCpms.length * 2 - 1;
+      let allCpms = Array(totalCpmCount);
+      trueCpms.forEach((levelCpm, i) => {
+        let level = i + 1;
+        allCpms[(level - 1) * 2] = [level, levelCpm];
+        if (level < maxLevel) {
+          let nextLevelCpm = trueCpms[i + 1];
+          let halfLevelCpm = getHalfLevelCPM(levelCpm, nextLevelCpm);
+          let halfLevel = level + 0.5;
+          allCpms[(halfLevel - 1) * 2] = [halfLevel, halfLevelCpm];
+        }
+      }, allCpms);
+      if (resultType == "df")
+        return allCpms;
+      return new Map(allCpms);
+      function getHalfLevelCPM(levelCpm, nextLevelCpm) {
+        let halfLevelCpm = Math.sqrt(levelCpm * levelCpm -
+          (levelCpm * levelCpm) / 2 +
+          (nextLevelCpm * nextLevelCpm) / 2);
+        return halfLevelCpm;
+      }
+    }
+    function createIvMatrix(floor = 0) {
+      const ivs = Array(4096);
+      // filling iv combos array
+      let i = 0;
+      console.time("creatIvCombos");
+      for (let aI = floor; aI < 16; aI++) {
+        for (let dI = floor; dI < 16; dI++) {
+          for (let sI = floor; sI < 16; sI++) {
+            ivs[i] = [i, aI, dI, sI];
+            i++;
+          }
+        }
+      }
+      console.timeEnd("creatIvCombos");
+      return ivs;
+      // console.log(ivs);
+    }
+    function getTotalStats(pfIdx, ivIdx, pokeForms, ivs) {
+      const a = pokeForms[pfIdx][2] + ivs[ivIdx][1]
+      const d = pokeForms[pfIdx][3] + ivs[ivIdx][2]
+      const s = pokeForms[pfIdx][4] + ivs[ivIdx][3]
+      return { a, d, s }
+    }
+    function getCP({ a, d, s, cpm }) {
+      return Math.max(10, ((a * Math.sqrt(d) * Math.sqrt(s) * Math.pow(cpm, 2)) / 10) >> 0);
+    }
+    function saveAsFile(data, mimeType, filename) {
+      let a = document.createElement('a')
+      let blob = new Blob([data], { type: mimeType })
+      a.href = URL.createObjectURL(blob)
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(a.href)
+    }
+    function compareCpuGpuResults_pfIvLevelsSPsAtCpLimit(cpuResults, gpuResults) {
+      let cols = ["level", "cp", "hp", "sp"]
+      const differences = {}
+      let maxPfIdx = (testParams.PF_BATCH_SIZE || testParams.DEFAULT_PF_BATCH_SIZE)
+      let maxIvIdx = (testParams.IV_BATCH_SIZE || testParams.DEFAULT_IV_BATCH_SIZE)
+      for (let pfIdx = 0; pfIdx < maxPfIdx; pfIdx++) {
+        let isDifferent = false
+        for (let ivIdx = 0; ivIdx < maxIvIdx; ivIdx++) {
+          for (let colIdx = 0; colIdx < 4; colIdx++) {
+            if (gpuResults[pfIdx][ivIdx][colIdx] != cpuResults[pfIdx][ivIdx][colIdx]) {
+              if (!differences[pfIdx]) differences[pfIdx] = {}
+              if (!differences[pfIdx][ivIdx]) differences[pfIdx][ivIdx] = {}
+              differences[pfIdx][ivIdx][cols[colIdx]] = { gpu: gpuResults[pfIdx][ivIdx][colIdx], cpu: cpuResults[pfIdx][ivIdx][colIdx] }
+              isDifferent = true
+              break
+            }
+          }
+          if (isDifferent) break
+        }
+      }
+      // console.log("differences:", differences)
+      let differenceSummary = { level: 0, cp: 0, hp: 0, sp: 0 }
+      Object.values(differences).forEach((pfEntry) => Object.values(pfEntry).forEach(ivEntry => Object.keys(ivEntry).forEach((diffKey) => differenceSummary[diffKey]++)))
+      console.log("differenceSummary:", differenceSummary)
+
+      let nonSPdiffs = Object.entries(differences)
+        .filter(([pfIdx, ivIdx]) => Object.values(ivIdx).every(iv => !(Object.keys(iv)[0] == "sp")))
+        .reduce((result, [pfIdx, diffEntry]) => {
+          let pfId = `${pokeForms[pfIdx][0]},${pokeForms[pfIdx][1]}`
+          let [, ...iv] = ivs[Object.keys(diffEntry)[0]]
+          let ivString = iv.join("-")
+          result.push([`${pfId} @ ${ivString}`, Object.values(diffEntry)[0]])
+          return result
+        }, [])
+      console.log("non-SP differences:", nonSPdiffs)
+    }
+    //#endregion HELPER FUNCTIONS
+
+    //#region CPU CALCS
+    function calcCpmsAtCpLimit_CPU(cpLimit, pokeForms, ivs) {
+      const atkIdx = 2, defIdx = 3, staIdx = 4;
+      const atkIvIdx = 1, defIvIdx = 2, staIvIdx = 3;
+      const calcCpms = Array(pokeForms.length);
+      for (let pfIdx in pokeForms) {
+        calcCpms[pfIdx] = Array(ivs.length);
+        for (let ivIdx in ivs) {
+          let a = pokeForms[pfIdx][atkIdx] + ivs[ivIdx][atkIvIdx];
+          let d = pokeForms[pfIdx][defIdx] + ivs[ivIdx][defIvIdx];
+          let s = pokeForms[pfIdx][staIdx] + ivs[ivIdx][staIvIdx];
+          calcCpms[pfIdx][ivIdx] = Math.sqrt(((cpLimit + 0.9999999) * 10) / (a * Math.sqrt(d) * Math.sqrt(s)));
+        }
+      }
+      return calcCpms;
+    }
+    function getMaxValidCpms_CPU(calcCpms, cpms) {
+      const yLength = calcCpms.length; /* number of pokeforms (1 calcCPM set per pokemform) */
+      const xLength = calcCpms[0].length; /* number of IV combos per pokeform */
+      const lastCpmIdx = cpms.length - 1; /* starting point for reverse scan of CPMs (CPMs length depends on IV_BATCH size) */
+      /* create array to hold results, length = # of pokeforms */
+      const trueCpms = Array(yLength);
+      /* loop through pokeforms */
+      for (let y = 0; y < yLength; y++) {
+        /* for each pokeform, create nested array for trueCPM results */
+        trueCpms[y] = Array(xLength);
+        /* loop through calcCPMs of current pokeform */
+        for (let x = 0; x < xLength; x++) {
+          // trueCpms[y][x] = cpms[0];
+          /* for each calcCPM reverse scan CPMs to find max valid CPM (first CPM <= calcCPM) */
+          for (let i = lastCpmIdx; i > -1; i--) {
+            if (cpms[i][1] <= calcCpms[y][x]) {
+              trueCpms[y][x] = cpms[i];
+              break;
+            }
+          }
+        }
+      }
+      return trueCpms;
+    }
+    function getPfIvLevelsSPsAtCpLimit_CPU(cpLimit, pokeForms, ivs, cpms) {
+      const calcCpms = calcCpmsAtCpLimit_CPU(cpLimit, pokeForms, ivs)
+      const yLength = calcCpms.length; /* number of pokeforms (1 calcCPM set per pokemform) */
+      const xLength = calcCpms[0].length; /* number of IV combos per pokeform */
+      const lastCpmIdx = cpms.length - 1; /* starting point for reverse scan of CPMs (CPMs length depends on IV_BATCH size) */
+      /* create array to hold results, length = # of pokeforms */
+      // const result = Array(yLength).fill(Array(xLength));
+      const result = Array(yLength);
+      /* loop through pokeforms */
+      for (let y = 0; y < yLength; y++) {
+        /* for each pokeform, create nested array for trueCPM results */
+        result[y] = Array(xLength);
+        /* loop through calcCPMs of current pokeform */
+        for (let x = 0; x < xLength; x++) {
+          // trueCpms[y][x] = cpms[0];
+          /* for each calcCPM reverse scan CPMs to find max valid CPM (first CPM <= calcCPM) */
+          for (let i = lastCpmIdx; i > -1; i--) {
+            if (cpms[i][1] <= calcCpms[y][x]) {
+              const a = pokeForms[y][2] + ivs[x][1]
+              const d = pokeForms[y][3] + ivs[x][2]
+              const s = pokeForms[y][4] + ivs[x][3]
+              const cpm = cpms[i][1]
+              const cp = Math.max(10, ((a * Math.sqrt(d) * Math.sqrt(s) * Math.pow(cpm, 2)) / 10) >> 0);
+              const hp = Math.floor(s * cpm)
+              const sp = Math.round(a * d * Math.pow(cpm, 2) * hp);
+              // result[y][x] = cpms[i]; /* return [level, cpm] */
+              // result[y][x] = [cpms[i][0], cp, (a * cpm), sp]; /* return [level, cp, hp, sp] */
+              // result[y][x] = [y, x, cpms[i][1], sp] /* return [pfIdx, ivIdx, cpm@cpLimit, sp] so that entries can be identified after sorting */
+              result[y][x] = [x, i, sp] /* return [ivIdx, cpmIdx, sp] so that entries can be identified after sorting */
+              // if (result[y][x][0] == 28) {
+              //   console.log(y, x, i)
+              // }
+              break;
+            }
+          }
+        }
+      }
+      return result;
+    }
+    function sortPfIVsAtCpLimit_CPU(pfIvLevelsSPs, pokeforms, ivs, cpms) {
+      /* modify idx vars below to match contents of validCPMsWithSPs entries */
+      // let spColIdx = 3, cpIdx = 1, AtkIdx = 2 /* for entries as [level, cp, Atk, sp] */
+      // let spColIdx = 3, pfIdx = 0, ivIdx = 1, cpmIdx = 2 /* for entries as [pfIdx, ivIdx, cpmIdx, sp] */
+      const ivIdx = 0, cpmIdx = 1, spColIdx = 2 /* for entries as [ivIdx, cpmIdx, sp] */
+      const atkBaseIdx = 2, defBaseIdx = 3, staBaseIdx = 4;
+      const atkIvIdx = 1, defIvIdx = 2, staIvIdx = 3;
+      for (const pfIdx in pfIvLevelsSPs) {
+        let aBase = pokeforms[pfIdx][atkBaseIdx],
+          dBase = pokeforms[pfIdx][defBaseIdx],
+          sBase = pokeforms[pfIdx][staBaseIdx]
+
+        pfIvLevelsSPs[pfIdx].sort((a, b) => {
+          // return b[spColIdx] - a[spColIdx] || b[cpIdx] - a[cpIdx] || b[AtkIdx] - a[AtkIdx]
+
+          /* compare SPs */
+          let c1 = b[spColIdx] - a[spColIdx]
+          if (c1) return c1
+
+          /* get stats for further comparisons */
+          let statsB = [
+            aBase + ivs[b[ivIdx]][atkIvIdx], /* atk total */
+            dBase + ivs[b[ivIdx]][defIvIdx], /* def total */
+            sBase + ivs[b[ivIdx]][staIvIdx]  /* sta total */
+          ]
+            , statsA = [
+              aBase + ivs[a[ivIdx]][atkIvIdx], /* atk total */
+              dBase + ivs[a[ivIdx]][defIvIdx], /* def total */
+              sBase + ivs[a[ivIdx]][staIvIdx]  /* sta total */
+            ]
+            , cpmB = cpms[b[cpmIdx]][1]
+            , cpmA = cpms[a[cpmIdx]][1]
+
+          /* compare CPs */
+          let cpB = Math.max(10, ((statsB[0] * Math.sqrt(statsB[1]) * Math.sqrt(statsB[2]) * Math.pow(cpmB, 2)) / 10) >> 0)
+          let cpA = Math.max(10, ((statsA[0] * Math.sqrt(statsA[1]) * Math.sqrt(statsA[2]) * Math.pow(cpmA, 2)) / 10) >> 0)
+          let c2 = cpB - cpA
+          if (c2) return c2
+
+          /* compare Atk */
+          let AtkB = statsB[0] * cpmB
+            , AtkA = statsA[0] * cpmA
+          return AtkB - AtkA
+        })
+        // return pfIvLevelsSPs
+      }
+    }
+    //#endregion CPU CALCS
+
+    //#region GPU CALCS
+    function createKernel(gpu, kernelFn, kernelSettings) {
+      return gpu.createKernel(kernelFn, kernelSettings);
+    }
+    function calcCPs_GPU(pokeForms, ivs, cpms) {
+      // prettyier-ignore /* GPU.createKernel notes */
+      {
+        /**
+         * dimensions in .setOutput() are in [x, y, z] order,
+         * and correspond to the length of the arrays in the respective thread (this.thread._).
+         * multidimensional output will be nested in reverse order:
+         * if output is [x,y] -> result will be [y[x]] -> array of length y, with nested arrays of length x
+         * if output is [x,y,z] -> result will be [z[y[x]]] -> array of length z, with nested arrays of length y, which also has nested arrays of length x
+         **/
+        // prettyier-ignore
+        /**
+         * I want output as [pokemonForms[ivs[cpms]]] so...
+         * pokeForms  -> this.thread.z
+         * ivs        -> this.thread.y
+         * cpms       -> this.thread.x
+         **/
+        // prettyier-ignore
+        /**
+         * pokeForms[this.thread.z][2] -> atkBase
+         * pokeForms[this.thread.z][3] -> defBase
+         * pokeForms[this.thread.z][3] -> staBase
+         * ivs[this.thread.y][1] -> atkIv
+         * ivs[this.thread.y][2] -> defIv
+         * ivs[this.thread.y][3] -> staIv
+         * cpms[this.thread.x] -> cpm
+         **/
+        // prettyier-ignore
+        // function calcCp (atk, def, sta, cpm) {
+        //   // atk, def, sta are base+IV
+        //   return Math.max(10,
+        //   ((a * Math.sqrt(d) * Math.sqrt(s) * cpm*cpm )  / 10) >> 0
+        // )}
+      }
+      const atkBaseIdx = 2;
+      const defBaseIdx = 3;
+      const staBaseIdx = 4;
+      const atkIvIdx = 1;
+      const defIvIdx = 2;
+      const staIvIdx = 3;
+      const { x, y, z } = this.thread;
+      /*
+              x -> iterator for pokeform
+              y -> iterator for IVs
+              z -> iterator for CPMs
+             */
+      const a = pokeForms[z][atkBaseIdx] + ivs[y][atkIvIdx];
+      const d = pokeForms[z][defBaseIdx] + ivs[y][defIvIdx];
+      const s = pokeForms[z][staBaseIdx] + ivs[y][staIvIdx];
+      const cpm = cpms[x];
+      const cp = Math.max(10, ((a * Math.sqrt(d) * Math.sqrt(s) * cpm * cpm) / 10) >> 0);
+      const sp = ((a * cpm * d * cpm * (s * cpm)) >> 0) / 1000;
+      // return [a,Math.sqrt(d),Math.sqrt(s),cpm*cpm] //
+      // return [pokeForms[this.thread.z][2], ivs[this.thread.y][1], cpms[this.thread.x]]
+      return [pokeForms[z][0], cpm, cp, sp];
+    }
+    function calcCpmsAtCpLimit_GPU(cpLimit, pokeForms, ivs) {
+      if (cpLimit == 0) return 1
+      const atkBaseIdx = 2, defBaseIdx = 3, staBaseIdx = 4;
+      const atkIvIdx = 1, defIvIdx = 2, staIvIdx = 3;
+      const { x, y } = this.thread;
+      /*
+            x -> iterator for pokeform
+            y -> iterator for IVs
+           */
+      const a = pokeForms[y][atkBaseIdx] + ivs[x][atkIvIdx];
+      const d = pokeForms[y][defBaseIdx] + ivs[x][defIvIdx];
+      const s = pokeForms[y][staBaseIdx] + ivs[x][staIvIdx];
+      const calcCpm = Math.sqrt(((cpLimit + 0.9999999) * 10) / (a * Math.sqrt(d) * Math.sqrt(s)));
+      // debugger;
+      return calcCpm;
+    }
+    /** Given calculated CPMs, get index of max valid CPMs/levels
+    * @param {*} calcCpms
+    * @param {[level: number, cpm: number][]} cpms 2D array, nested items must be [level, CPM]
+    * @param {*} lastCpmIdx
+    * @param {boolean} returnCPM If true, result includes CPMs. If returnLevel is also true, result is 2D array
+    * @param {boolean} returnLevel If true, result includes level. If returnCPM is also true, result is 2D array
+    * @returns
+    */
+    function getMaxValidCpms_GPU(calcCpms, cpms, lastCpmIdx, returnCPM, returnLevel) {
+      // debugger;
+      // if (!returnCPM && !returnLevel)
+      //   return;
+      const { x, y } = this.thread;
+      /* x -> iterator for pokeform | y -> iterator for IVs*/
+      // let i = cpms.length - 1; /* can't use .length??  using lastCpmIdx param instead */
+      let i = lastCpmIdx
+      while (i > -1 && calcCpms[y][x] < cpms[i][1]) {
+        i--;
+      }
+      if (returnCPM && returnLevel)
+        return cpms[i];
+      const resultIdx = returnLevel ? 0 : 1;
+      return cpms[i][resultIdx]; // return level
+      /* For Debugging:
+          [current calcCPM, i, first cpm < calcCPM, corresponding level] */
+      // return [calcCpms[y][x], i, cpms[i][1], cpms[i][0]]
+    }
+    function getPfIvLevelsSPsAtCpLimit_GPU(cpLimit, pokeForms, ivs, cpms, lastCpmIdx) {
+      // debugger;
+      /* GET CALC CPMs AT CP LIMIT */
+      // if (cpLimit == 0) return 1
+      const { x: ivIdx, y: pfIdx } = this.thread;
+      const atkBaseIdx = 2, defBaseIdx = 3, staBaseIdx = 4;
+      const atkIvIdx = 1, defIvIdx = 2, staIvIdx = 3;
+      /*
+      x -> iterator for pokeform
+      y -> iterator for IVs
+      */
+      const a = pokeForms[pfIdx][atkBaseIdx] + ivs[ivIdx][atkIvIdx];
+      const d = pokeForms[pfIdx][defBaseIdx] + ivs[ivIdx][defIvIdx];
+      const s = pokeForms[pfIdx][staBaseIdx] + ivs[ivIdx][staIvIdx];
+      const calcCpm = Math.sqrt(((cpLimit + 0.9999999) * 10) / (a * Math.sqrt(d) * Math.sqrt(s)));
+
+      /* GET MAX VALID CPMs */
+      // if (!returnCPM && !returnLevel)
+      //   return;
+      let cpmIdx = lastCpmIdx
+      while (cpmIdx > -1 && calcCpm < cpms[cpmIdx][1]) {
+        cpmIdx--;
+      }
+      const cpm = cpms[cpmIdx][1]
+      const A = a * cpm
+      const D = d * cpm
+      const hp = Math.floor(s * cpm)
+      const cp = Math.max(10, ((a * Math.sqrt(d) * Math.sqrt(s) * Math.pow(cpm, 2)) / 10) >> 0);
+      // const sp = ((a *  d * Math.pow(cpm,2) * Math.floor(s * cpm)));
+      const sp = Math.round(A * D * hp);
+      // return [cpms[cpmIdx][0], cp, A, sp] /* return [level, cp Atk, sp] */
+      // return [pfIdx, ivIdx, cpms[cpmIdx][1], sp] /* return [pfIdx, ivIdx, cpm@cpLimit, sp] so that entries can be identified after sorting */
+      // return [ivIdx, cpmIdx, sp] /* return [ivIdx, cpmIdx, sp] so that entries can be identified after sorting */
+      return [ivIdx, sp, cp, A] /* return [ivIdx, sp, cp, A] so that entries can be identified after sorting, and so sorting on gpu doesn't need to perform lookups (since it already has cp and Atk for tie-breaking) */
+    }
+    function sortPfIVsAtCpLimit_GPU(pfIvLevelsSP, pokeforms, ivs, cpms) {
+      /* currently will not run due to unknown identifiers -> probably 'outputX' and 'result' */
+      // debugger;
+      let { y, x } = this.thread
+      /* outputX is the X dimension length inside kernel */
+      /* pass all except last input element directly to result */
+      if (x < outputX - 1) { return pfIvLevelsSP[y][x] }
+
+      /* manually add last input element, then sort */
+      result[y][x] = pfIvLevelsSP[y][x]
+
+      // let spColIdx = 3, pfIdx = 0, ivIdx = 1, cpmIdx = 2 /* for entries as [pfIdx, ivIdx, cpmIdx, sp] */
+      let ivIdx = 0, cpmIdx = 1, spColIdx = 2 /* for entries as [ivIdx, cpmIdx, sp] */
+      function compareSP_CP_Atk(a, b) {
+        /*  */
+        // return b[spColIdx] - a[spColIdx] || b[cpIdx] - a[cpIdx] || b[AtkIdx] - a[AtkIdx]
+
+        /* compare SPs */
+        let c1 = b[spColIdx] - a[spColIdx]
+        if (c1) return c1
+
+        /* get stats for further comparisons */
+        let statsB = [
+          pokeforms[b[pfIdx]][2] + ivs[b[ivIdx]][1], /* atk total */
+          pokeforms[b[pfIdx]][3] + ivs[b[ivIdx]][2], /* def total */
+          pokeforms[b[pfIdx]][4] + ivs[b[ivIdx]][3]  /* sta total */
+        ]
+          , statsA = [
+            pokeforms[a[pfIdx]][2] + ivs[a[ivIdx]][1], /* atk total */
+            pokeforms[a[pfIdx]][3] + ivs[a[ivIdx]][2], /* def total */
+            pokeforms[a[pfIdx]][4] + ivs[a[ivIdx]][3]  /* sta total */
+          ]
+          , cpmB = cpms[b[cpmIdx]]
+          , cpmA = cpms[a[cpmIdx]]
+
+        /* compare CPs */
+        let cpB = Math.max(10, ((statsB[0] * Math.sqrt(statsB[1]) * Math.sqrt(statsB[2]) * Math.pow(cpmB, 2)) / 10) >> 0)
+        let cpA = Math.max(10, ((statsA[0] * Math.sqrt(statsA[1]) * Math.sqrt(statsA[2]) * Math.pow(cpmA, 2)) / 10) >> 0)
+        let c2 = cpB - cpA
+        if (c2) return c2
+
+        /* compare Atk */
+        let AtkB = statsB[0] * cpmB
+          , AtkA = statsA[0] * cpmA
+        return AtkB - AtkA
+      }
+      this.result[y].sort(compareSP_CP_Atk)
+      /* return last item after sorting, so it's not lost */
+      return this.result[y][x]
+      //  done = false
+      //  while (!done) {}
+    }
+    function gpuOddEvenSort(input, n, spColIdx) {
+      let result = k2(k1(input, spColIdx), spColIdx)
+      for (let i = 0; i < n - 1; i++) {
+        result = k2(k1(result, spColIdx), spColIdx)
+      }
+      return result;
+    }
+    // function gpuOddEvenSort_oddPhase(input, spIdx, cpIdx, AtkIdx) {
+    function gpuOddEvenSort_oddPhase(input, spColIdx) {
+      // debugger
+      // let { y: pfIdx, x: el1Idx } = this.thread
+      let { y, x } = this.thread
+      // let isIv1IdxEven = iv1Idx % 2 == 0
+      /* if iv1Idx is odd iv2Idx is iv1Idx - 1 
+         if iv1Idx is odd iv2Idx is iv1Idx + 1 
+         Can't use the inverse bc '& 0' to check even always returns 0 */
+      // let el2Idx = el1Idx - (el1Idx & 1 || -1)
+      // let el2Idx = 0
+      // if (el1Idx % 2 == 0) el2Idx = el1Idx + 1
+      // else el2Idx = el1Idx - 1
+
+      // let sp2 = input[pfIdx]
+      return input[y][x]
+      // if (sp2 < 0) return input[pfIdx][el1Idx]
+
+      // let sp1 = input[pfIdx][el1Idx][spColIdx]
+      // return sp1
+      // // let resultIdx = iv1Idx
+      // if (isIv1IdxEven) {
+      //   if (sp2 > sp1) return input[pfIdx][el2Idx]
+      //   else return input[pfIdx][el1Idx]
+      // }
+      // else { /* iv1Idx is ODD */
+      //   if (sp2 < sp1) return input[pfIdx][el2Idx]
+      //   else return input[pfIdx][el1Idx]
+      // }
+      // el2Idx = el1Idx - 1
+      // if (input[pfIdx][el2Idx]) {
+      //   resultIdx = input[pfIdx][el1Idx][spColIdx] < input[pfIdx][el2Idx][spColIdx] ? el1Idx : el2Idx
+      // }
+      // // return input[pfIdx][resultIdx ?? iv1Idx]
+      // return input[pfIdx][resultIdx]
+    }
+    function gpuOddEvenSort_evenPhase(input, spColIdx) {
+      let { y: pfIdx, x: iv1Idx } = this.thread
+      return input[pfIdx][iv1Idx]
+      // return input[pfIdx][iv1Idx]
+      // let iv2Idx = iv1Idx + 1
+      // let resultIdx = iv1Idx
+      // if (iv1Idx & 1 && input[pfIdx][iv2Idx]) {
+      //   resultIdx = input[pfIdx][iv1Idx][spColIdx] > input[pfIdx][iv2Idx][spColIdx] ? iv1Idx : iv2Idx
+      // }
+      // iv2Idx = iv1Idx - 1
+      // if (input[pfIdx][iv2Idx]) {
+      //   resultIdx = input[pfIdx][iv1Idx][spColIdx] < input[pfIdx][iv2Idx][spColIdx] ? iv1Idx : iv2Idx
+      // }
+      // // return input[pfIdx][resultIdx ?? iv1Idx]
+      // return input[pfIdx][resultIdx]
+    }
+
+
+    function oddEvenSort_js(input, n) {
+      /* https://www.geeksforgeeks.org/odd-even-sort-brick-sort/ */
+      // let { y: pfIdx, x: ivIdx } = this.thread
+      let isSorted = false;
+
+      while (!isSorted) {
+        isSorted = true;
+        let temp = 0;
+
+        // Perform Bubble sort on odd indexed element
+        for (let i = 1; i <= n - 2; i = i + 2) {
+          if (input[i] > input[i + 1]) {
+            temp = input[i];
+            input[i] = input[i + 1];
+            input[i + 1] = temp;
+            isSorted = false;
+          }
+        }
+
+        // Perform Bubble sort on even indexed element
+        for (let i = 0; i <= n - 2; i = i + 2) {
+          if (input[i] > input[i + 1]) {
+            temp = input[i];
+            input[i] = input[i + 1];
+            input[i + 1] = temp;
+            isSorted = false;
+          }
+        }
+      }
+
+      return;
+    }
+    //#endregion GPU CALCS
+    //#endregion FUNCTION DEFINITIONS
+  </script>
+</body>
+
+</html>

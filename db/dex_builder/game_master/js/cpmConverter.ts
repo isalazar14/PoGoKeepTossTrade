@@ -1,5 +1,5 @@
-function getCorrectCpms(floatCPMs: number[], resultType: "df" | "map" = "df") {
-	if (floatCPMs.length == 0) {console.error("floatCpms array is empty"); return}
+export default function getCorrectCpms(floatCPMs: number[], resultType: "df" | "map" = "df") {
+	// if (floatCPMs.length == 0) {console.error("floatCpms array is empty"); return}
   const trueCpms = new Float32Array(floatCPMs);
   const maxLevel = trueCpms.length;
   const totalCpmCount = trueCpms.length * 2 - 1;
@@ -14,8 +14,9 @@ function getCorrectCpms(floatCPMs: number[], resultType: "df" | "map" = "df") {
       allCpms[(halfLevel - 1) * 2] = [halfLevel, halfLevelCpm];
     }
   }, allCpms);
-  if (resultType == "map") return new Map(allCpms)
-  return allCpms;
+  if (resultType == "df") return allCpms;
+  return new Map(allCpms)
+  
 }
 
 function getHalfLevelCPM(levelCpm: number, nextLevelCpm: number): number {
