@@ -16,7 +16,7 @@
     <ion-row>
       <ion-col size="12">
         <ion-button>
-          <ion-icon lazy="true" slot="start" name="download"></ion-icon>
+          <ion-icon lazy="true" slot="start" name="folder"></ion-icon>
           <ion-label>Import PokeGenie CSV</ion-label>
           <input type="file" (change)="handleImport()" #fileInput accept="text/csv">
         </ion-button>
@@ -25,8 +25,8 @@
   </ion-grid>
   <ng-container *ngIf="fileLoading"><ion-progress-bar  [value]="fileLoadingProgress"></ion-progress-bar></ng-container>
   <div #pgTable *ngIf="fileLoaded">
-    <ion-grid>
-      <ion-row class="headerRow">
+    <!-- <ion-grid> -->
+      <ion-row id="headerRow" class="ion-padding">
         <ion-col size="">
           <p class="pgHeader">Pokemon</p>
         </ion-col>
@@ -42,7 +42,7 @@
         <ion-col size="" class="ion-hide-md-down">
           <p class="pgHeader">UL</p>
         </ion-col>
-        <ion-col size="" class="ion-hide-lg-up">
+        <ion-col size="" class="ion-hide-md-up">
           <p class="pgHeader">Best Result</p>
           <small>Rank | Evo | League | Dust</small>
         </ion-col>
@@ -71,16 +71,16 @@
       </ng-container>
       <ng-container *ngIf="pgDataMap">
         <ion-accordion-group multiple="false">
-          <ion-accordion *ngFor="let pf of (pgDataMap | keyvalue)">
-            <ion-item slot="header">
-              <ion-label>
-                <ion-grid>
-                  <ion-row>
+          <ion-accordion *ngFor="let pf of (pgDataMap | keyvalue)" class="stickyTopLevel2">
+            <!-- <ion-item slot="header" class="stickyTopLevel3"> -->
+              <!-- <ion-label> -->
+                <!-- <ion-grid> -->
+                  <ion-row slot="header" class="ion-nowrap ion-padding pgSummaryRow">
                     <ion-col>
                       {{pf.value.form ? pf.value.pokemon + " " + pf.value.form : pf.value.pokemon}}
                     </ion-col>
                     <ion-col>
-                      {{pf.value.entries.length}}
+                      (x {{pf.value.entries.length}})
                     </ion-col>
                     <ion-col class="ion-hide-md-down">
                       {{pf.value.summary.gl.eligible}}
@@ -100,44 +100,44 @@
                         </tbody>
                       </table>
                     </ion-col>
-                    <ion-col class="ion-hide-lg-up">
-                      <p>{{pf.value.summary.bestRank}}</p>
+                    <ion-col class="ion-hide-md-up">
+                      <p># {{pf.value.entries[pf.value.summary.bestIdx]['Rank # (' + pf.value.summary.bestLeague + ')']}}</p>
                     </ion-col>
-                    <ion-col class="ion-hide-lg-up">
-                      <p>{{pf.value.entries[pf.value.summary.bestIdx]['Rank # (' + pf.value.summary.bestLeague + ')']}}</p>
+                    <ion-col class="ion-hide-md-up">
+                      <p>{{pf.value.entries[pf.value.summary.bestIdx]['Name (' + pf.value.summary.bestLeague + ')']}}</p>
                     </ion-col>
-                    <ion-col class="ion-hide-lg-up">
+                    <ion-col class="ion-hide-md-up">
                       <p>{{pf.value.summary.bestLeague + 'L'}}</p>
                     </ion-col>
-                    <ion-col class="ion-hide-lg-up">
+                    <ion-col class="ion-hide-md-up">
                       <p>{{pf.value.entries[pf.value.summary.bestIdx]['Dust Cost (' + pf.value.summary.bestLeague + ')']}}</p>
                     </ion-col>
                   </ion-row>
-                </ion-grid>
-              </ion-label>
-            </ion-item>
-            <ion-grid slot="content">
-              <ion-row class="subHeader">
+                <!-- </ion-grid> -->
+              <!-- </ion-label> -->
+            <!-- </ion-item> -->
+            <div slot="content">
+              <ion-row class="subHeader ion-padding">
                 <ion-col>
                   Name
                 </ion-col>
                 <ion-col>
-                  IVs (atk-def-sta)
+                  IVs<br/>
+                  <small>(atk-def-sta)</small>
                 </ion-col>
-                <ion-col class="ion-hide-md-down">
+                <ion-col class="">
                   Moves
                 </ion-col>
-                <ion-col class="ion-hide-md-down">
+                <ion-col class="">
                   GL<br/>
                   <small>Pokemon | Rank | SP % | Dust</small>
                 </ion-col>
-                <ion-col class="ion-hide-md-down">
+                <ion-col class="">
                   UL<br/>
                   <small>Pokemon | Rank | SP % | Dust</small>
                 </ion-col>
               </ion-row>
-              <ion-row *ngFor="let mon of pf.value.entries; index as i;let count" padding>
-                <!-- <ion-col>{{i}}</ion-col> -->
+              <ion-row *ngFor="let mon of pf.value.entries; index as i;let count" class="ion-padding">
                 <ion-col size="">
                   <p class="">{{mon.Name}} 
                       <img *ngIf="mon['Shadow/Purified'] == 1" class="shadowPureIcon" [src]="shadowIconUrl" alt="shadow pokemon icon">
@@ -147,7 +147,7 @@
                 <ion-col size="">
                   <p class="">{{mon["Atk IV"]}}-{{mon["Def IV"]}}-{{mon["Sta IV"]}}</p>
                 </ion-col>
-                <ion-col size="" class="ion-hide-md-down">
+                <ion-col size="" class="">
                   <table>
                     <tbody>
                       <tr><td class="ion-padding-end">QM</td><td class="ion-padding-end">{{mon["Quick Move"]}}</td></tr>
@@ -156,7 +156,7 @@
                     </tbody>
                   </table>
                 </ion-col>
-                <ion-col size="" class="ion-hide-md-down">
+                <ion-col size="" class="">
                   <table>
                     <tbody>
                       <tr>
@@ -164,14 +164,14 @@
                           <img *ngIf="mon['Sha/Pur (G)'] == 1" class="shadowPureIcon" [src]="shadowIconUrl" alt="shadow pokemon icon">
                           <img *ngIf="mon['Sha/Pur (G)'] == 2" class="shadowPureIcon" [src]="purifiedIconUrl" alt="purified pokemon icon">
                         </td>
-                        <td class="ion-padding-end">{{mon["Rank (G)"]}}</td>
+                        <td class="ion-padding-end"># {{mon["Rank # (G)"]}}</td>
                         <td class="ion-padding-end">{{mon["Stat Prod (G)"]}}</td>
                         <td class="ion-padding-end">{{mon["Dust (G)"]}}</td>
                       </tr>
                     </tbody>
                   </table>
                 </ion-col>
-                <ion-col size="" class="ion-hide-md-down">
+                <ion-col size="" class="">
                   <table>
                     <tbody>
                       <tr>
@@ -179,7 +179,7 @@
                           <img *ngIf="mon['Sha/Pur (U)'] == 1" class="shadowPureIcon" [src]="shadowIconUrl" alt="shadow pokemon icon">
                           <img *ngIf="mon['Sha/Pur (U)'] == 2" class="shadowPureIcon" [src]="purifiedIconUrl" alt="purified pokemon icon">
                         </td>
-                        <td class="ion-padding-end">{{mon["Rank (U)"]}}</td>
+                        <td class="ion-padding-end">{{mon["Rank # (U)"]}}</td>
                         <td class="ion-padding-end">{{mon["Stat Prod (U)"]}}</td>
                         <td class="ion-padding-end">{{mon["Dust Cost (U)"]}}</td>
                       </tr>
@@ -187,11 +187,11 @@
                   </table>
                 </ion-col>
               </ion-row>
-            </ion-grid>
+            </div>
           </ion-accordion>
         </ion-accordion-group>
       </ng-container>
-    </ion-grid>
+    <!-- </ion-grid> -->
   </div>
   <ion-row>
     <ion-col>

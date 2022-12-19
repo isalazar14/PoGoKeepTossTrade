@@ -25,18 +25,58 @@
 #container a {
   text-decoration: none;
 }
-.headerRow {
+
+#importBtn{
+  width: 100%;
+}
+
+ion-list {
+  padding-top: 0px
+}
+
+#headerRow {
+  background-color: #121212;
   position: sticky;
   top: 0;
-  z-index: 10;
-  background-color: #121212;
+  height: 3.75rem;
+  z-index: 2;
+
+  ion-col {
+    display: table-column;
+  }
+}
+.accordion-collapsed, .accordion-expanded {
+  // position: sticky;
+  // top: 3.75rem;
+  // z-index: 1;
+}
+
+.accordion-expanded {
+  // overflow-y: scroll;
+}
+
+
+#headerRow ion-row,
+.pgSummaryRow {
+  // flex-grow: 1;
+  // flex-shrink: 0;
+  justify-content: space-between;
+  td {
+    font-size: .8rem;
+  }
+}
+
+.pgEntriesContainerRow {
+  display: table-row;
 }
 
 .subHeader {
   background-color: slategray;
+  // position: sticky;
+  // top: 100px
 }
 
 .shadowPureIcon {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.5em;
+  height: 1.5em;
 }

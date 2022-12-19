@@ -5,75 +5,131 @@ import {
 	AfterViewInit,
 	Renderer2,
 	OnInit,
+	OnChanges,
 } from '@angular/core';
 import { Papa, ParseResult } from 'ngx-papaparse';
+import { BehaviorSubject } from 'rxjs';
+import { StorageService } from '../services/storage.service';
 
 @Component({
 	selector: 'app-home',
-	templateUrl: 'home.page.html',
+	// templateUrl: 'home.page.html',
+	templateUrl: 'home.page.ListItems.html',
 	styleUrls: ['home.page.scss'],
 })
-export class HomePage implements OnInit, AfterViewInit {
+export class HomePage implements OnInit, OnChanges, AfterViewInit {
 	@ViewChild('fileInput') fileInput: ElementRef<HTMLInputElement> | null = null;
+	@ViewChild('pgTable') pgTable: ElementRef<HTMLTableElement> | null = null;
+	@ViewChild('headerRow') headerRow: ElementRef<HTMLTableRowElement> | null =
+		null;
+
 	// pgHeaders: any
 	pgDataArray: any[] | null = null;
-	pgDataMap: Map<string, PfGroup> | null = null;
+	private _pgData: BehaviorSubject<Map<string, PfGroup>> = new BehaviorSubject(
+		new Map<string, PfGroup>()
+	);
+	get pgData() {
+		return this._pgData.asObservable();
+	}
 	fileLoading: boolean = false;
 	fileLoadingProgress = 0;
 	fileLoaded: boolean = false;
+	tableVisibleColCount: number | undefined = 0;
 	shadowIconUrl =
 		'https://archives.bulbagarden.net/media/upload/e/e4/GO_Shadow_icon.png';
 	purifiedIconUrl =
 		'https://archives.bulbagarden.net/media/upload/8/89/GO_Purified_icon.png';
-	constructor(private papa: Papa) {}
+  pgHeaders = {
+			Index: 'index',
+			Name: 'name',
+			'Pokemon Number': 'number',
+			Form: 'form',
+			Gender: 'gender',
+			CP: 'cp',
+			HP: 'hp',
+			'Atk IV': 'aIV',
+			'Def IV': 'dIV',
+			'Sta IV': 'sIV',
+			'Level Min': 'lvlMin',
+			'Level Max': 'lvlMax',
+			'Quick Move': 'qm',
+			'Charge Move': 'cm',
+			'Charge Move 2': 'cm2',
+			'Catch Date': 'catchDate',
+			Lucky: 'lucky',
+			'Shadow/Purified': 'shadowPurified',
+			Favorite: 'favorite',
+			'Marked for PvP use': 'markedForPvp',
+		} as {[key:string]: string};
+	constructor(
+		private papa: Papa,
+		// private storage: StorageService,
+		private renderer: Renderer2
+	) {}
 
 	handleImport() {
 		this.fileLoading = true;
+		
 		this.papa.parse(this.fileInput?.nativeElement.files?.item(0) as File, {
-			header: true,
+      header: true,
+      worker: true,
+			transformHeader: (header) => this.pgHeaders[header] ?? header,
 			complete: (csv: ParseResult) => {
-				// this.pgHeaders = csv.data[0]
-				// this.pgData = csv.data.slice(1)
-				// this.pgDataArray = csv.data
-				// this.pgDataMap = this.condensePgData(csv.data);
-				this.condensePgData(csv.data);
-				this.fileLoading = false;
-				this.fileLoaded = true;
-
-				// console.log("pgHeaders:", this.pgHeaders)
-				// console.log("pgData:", this.pgData)
-			},
+        console.dir(csv);
+        // this.pgHeaders = csv.data[0]
+        // this.pgData = csv.data.slice(1)
+        // this.pgDataArray = csv.data
+        // this.pgDataMap = this.condensePgData(csv.data);
+        this.condensePgData(csv.data);
+        this.fileLoading = false;
+        this.fileLoaded = true;
+    
+        // console.log("pgHeaders:", this.pgHeaders)
+        // console.log("pgData:", this.pgData)
+        let visibleCols = 0;
+        // this.headerRow?.nativeElement.querySelectorAll('th').forEach(col => {console.log(col.style.display)})
+        // console.log(this.tableVisibleColCount)
+    
+        // this.pgTable?.nativeElement.classList.toggle("ion-hide")
+        this.renderer.removeClass(this.pgTable, 'ion-hide');
+      },
 		});
 	}
+
+	
+
 	condensePgData(data: PgDataRow[]) {
-		this.pgDataMap = new Map<string, PfGroup>();
+		// this.pgDataMap = new Map<string, PfGroup>();
 		data.forEach((pgRow, i) => {
 			let pfId = pgRow.Form
 				? `${pgRow['Pokemon Number']},${pgRow.Form}`
 				: `${pgRow['Pokemon Number']}`;
 			if (pfId) {
-				let pfGroup: PfGroup | undefined = this.pgDataMap?.get(pfId);
+				let pfGroup: PfGroup | undefined = this._pgData.value.get(pfId);
 				if (!pfGroup) {
 					pfGroup = new PfGroup(
 						pgRow['Pokemon Number'],
 						pgRow.Name,
 						pgRow.Form
 					);
-					this.pgDataMap?.set(pfId, pfGroup);
+					this._pgData?.value.set(pfId, pfGroup);
 				}
 				pfGroup.addEntry(pgRow);
 				this.fileLoadingProgress = (i + 1) / data.length;
 			}
 		});
-		console.log(this.pgDataMap);
+		console.log(this._pgData);
 		// return map;
 	}
 
-	ngOnInit() {
-		// console.log(this.pgDataMap)
-	}
+	ngOnInit() {}
 	ngAfterViewInit() {
 		console.log(this.fileInput);
+		console.log(this.tableVisibleColCount);
+	}
+
+	ngOnChanges() {
+		// console.log(this.tableVisibleColCount);
 	}
 }
 
@@ -160,7 +216,8 @@ class LeagueSummary {
 		if (rank < this.rankBest) {
 			this.rankBest = rank;
 			this.spMax = sp;
-		} else if (rank > this.rankWorst) {
+		}
+		if (rank > this.rankWorst) {
 			this.rankWorst = rank;
 			this.spMin = sp;
 		}
