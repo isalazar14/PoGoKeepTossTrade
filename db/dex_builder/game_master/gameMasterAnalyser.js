@@ -19,9 +19,10 @@ let relowerCase = /[a-z]/;
 for (let { templateId } of gm) {
   let hasLowerCase = relowerCase.test(templateId);
   if (hasLowerCase) continue;
-  let vNumber = reNumberedEntry.exec(templateId);
+  // let vNumber = reNumberedEntry.exec(templateId);
+  let vNumber = reNumberedEntry.test(templateId);
   if (vNumber) {
-    templateId = templateId.split(vNumber).join("V<id>");
+    // templateId = templateId.split(vNumber).join("V<id>");
     numberedTemplates.add(templateId);
   } else {
     templateIds.add(templateId);
