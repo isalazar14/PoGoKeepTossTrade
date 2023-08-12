@@ -1,4 +1,4 @@
-import db from '../util/db'
+import db from './db'
 import readCsv from './csvReaderPromise'
 
 export const initDB = async () => {

@@ -27,7 +27,7 @@ export function createIvCombosArray () {
 }
 
 export function createIvCombosObj () {
-  const ivs = {};
+  const ivs = [];
   let i = 1;
   for (let a = 0; a < 16; a++) {
     for (let d = 0; d < 16; d++) {

@@ -1,12 +1,20 @@
-import React, { useState, useEffect } from "react";
+/* COULD NOT GET THIS TO RUN AFTER SWITCHING TO VITE WITH REACT ROUTER v6
+  COPIED ESSENTIAL PARTS TO APP.TSX PROVIDED BY VITE SETUP.
+  KEPT THIS FOR REFERENCE OF PREVIOUS STATE, CONTEXT, AND ROUTES
+    UNTIL THEY'RE IMPLEMENTED IN NEW APP.TSX
+ */
+
+import { useState } from "react";
 // import axios from "axios";
-import { Router, Link } from "@reach/router";
+// import { Router, Link } from "@reach/router";
+import { Link, Routes, Route } from "react-router-dom";
 import Context from "./context/Context";
 import CSVDragDrop from "./components/CSVDragDrop";
 import CSVResults from "./components/CSVResults";
-import Papa from "papaparse";
+import FileUploadForm from "./components/FileUploadForm";
+// import Papa from "papaparse";
 import "./App.css";
-import "./data/pokemon.csv";
+// import "./data/pokemon.csv";
 
 function App() {
   const [pokeListState, setPokeListState] = useState([]);
@@ -15,11 +23,18 @@ function App() {
 
   // const [csvData, setCsvData] = useState();
 
+  // const routes: RouteObject[] = [
+  //   {
+
+  //   }
+  // ]
+
   return (
     <div className="App">
+      <p>App</p>
       <Link to="/">Home</Link>
-      
-      {/* <FileUploadForm /> */}
+
+      <FileUploadForm />
       <Context.Provider
         value={{
           pokeListState,
@@ -30,16 +45,20 @@ function App() {
           setPokeDB,
         }}
       >
-        <Router>
-          <CSVDragDrop
-            path={"/"}
+        {/* <Router> */}
+        <Routes>
+          <Route path={"/"} element={
+            <CSVDragDrop
+            // path={"/"}
             // pokeListState={pokeListState}
             // setPokeListState={setPokeListState}
             // fieldState={fieldState}
             // setFieldState={setFieldState}
+            />}
           />
-          <CSVResults path={"results"} />
-        </Router>
+          <Route path={"results"} element = {<CSVResults />} />
+        </Routes>
+        {/* </Router> */}
       </Context.Provider>
       {/* <div className="spinner-border" role="status">
         <span className="visually-hidden"></span>
