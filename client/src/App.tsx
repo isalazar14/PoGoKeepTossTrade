@@ -2,8 +2,34 @@ import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import { Routes, Route, BrowserRouter } from 'react-router-dom'
+// import CSVDragDrop from './components/CSVDragDrop'
+import CSVResults from './components/CSVResults'
+import CSVDragDropUpload from './components/CSVDragDropUpload'
 
-function App() {
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      {/* <p>Pogo App</p> */}
+      <Routes>
+        <Route path={"/"} element={
+          <CSVDragDropUpload
+          // path={"/"}
+          // pokeListState={pokeListState}
+          // setPokeListState={setPokeListState}
+          // fieldState={fieldState}
+          // setFieldState={setFieldState}
+          />}
+        />
+        <Route path={"results"} element={<CSVResults />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
+
+
+export function ViteApp() {
   const [count, setCount] = useState(0)
 
   return (
@@ -32,4 +58,4 @@ function App() {
   )
 }
 
-export default App
+// export default ViteApp

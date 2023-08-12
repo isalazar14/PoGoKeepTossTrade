@@ -1,11 +1,17 @@
+/* NOT USED AFTER SWITCHING TO VITE (WHICH USES MAIN.TSX)
+  KEPT THIS FOR REFERENCE OF PREVIOUS WORKER SETUP
+    UNTIL IMPLEMENTED IN NEW MAIN.TSX
+ */
+
+
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
-import App from "./App";
+import App from "./AppOld";
 import * as serviceWorker from "./serviceWorker";
 // import reportWebVitals from 'web-vitals';
-import readCsv from "./util/csvReaderPromise";
-import DbWorker from "workerize-loader!./util/dbWorker.js"; // eslint-disable-line import/no-webpack-loader-syntax
+// import readCsv from "./util/csvReaderPromise";
+// import DbWorker from "workerize-loader!./util/dbWorker.js"; // eslint-disable-line import/no-webpack-loader-syntax
 // import GpuWorker from "workerize-loader!./util/gpuWorker.js"; // eslint-disable-line import/no-webpack-loader-syntax
 
 
