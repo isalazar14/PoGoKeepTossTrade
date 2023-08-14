@@ -6,6 +6,7 @@ import { Routes, Route, BrowserRouter } from 'react-router-dom'
 // import CSVDragDrop from './components/CSVDragDrop'
 import CSVResults from './components/CSVResults'
 import CSVDragDropUpload from './components/CSVDragDropUpload'
+import GpuTestPage from './pages/GpuTest'
 
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
           />}
         />
         <Route path={"results"} element={<CSVResults />} />
+        <Route path={"gpu"} element={<GpuTestPage />} />
       </Routes>
     </BrowserRouter>
   )

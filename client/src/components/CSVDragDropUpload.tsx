@@ -5,13 +5,13 @@ import { CustomConfig } from 'react-papaparse/dist/model';
 import { ParseResult } from 'papaparse'
 
 const GREY = '#CCC';
+const GREY_DIM = '#686868';
 const GREY_LIGHT = 'rgba(255, 255, 255, 0.4)';
 const DEFAULT_REMOVE_HOVER_COLOR = '#A01919';
 const REMOVE_HOVER_COLOR_LIGHT = lightenDarkenColor(
   DEFAULT_REMOVE_HOVER_COLOR,
   40
 );
-const GREY_DIM = '#686868';
 
 const styles = {
   zone: {
@@ -86,7 +86,7 @@ const csvReaderConfig: CustomConfig = {
   error: handleParseError
 }
 
-export default function CSVReader() {
+export default function CSVDropDropUpload() {
   const { CSVReader } = useCSVReader();
   const [zoneHover, setZoneHover] = useState(false);
   const [removeHoverColor, setRemoveHoverColor] = useState(
