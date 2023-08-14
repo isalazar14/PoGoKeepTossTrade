@@ -21,9 +21,12 @@ app.get('/gputest', (req, res) => {
 	res.sendFile(resolve('./gpujsTest.html'), err => console.log(err))
 })
 
-const key = fs.readFileSync('../cert/CA/localhost/localhost.decrypted.key');
-const cert = fs.readFileSync('../cert/CA/localhost/localhost.crt');
-const server = https.createServer({ key, cert }, app);
-
 const port = 8000;
-server.listen(port, () =>  console.log(`Now listening on port ${port}`));
+app.listen(port, () =>  console.log(`Now listening on port ${port}`));
+
+/* requires cert, don't know where it went. only necessary for features that requre https, like SharedArrayBuffer */
+// const key = fs.readFileSync('../cert/CA/localhost/localhost.decrypted.key');
+// const cert = fs.readFileSync('../cert/CA/localhost/localhost.crt');
+// const server = https.createServer({ key, cert }, app);
+
+// server.listen(port, () =>  console.log(`Now listening on port ${port}`));
