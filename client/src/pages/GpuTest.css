@@ -1,0 +1,25 @@
+#content {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 20px;
+}
+
+table {
+  max-width: 450px;
+  /* background-color: cornflowerblue; */
+  /* color: black; */
+}
+
+th,
+td {
+  /* first column */
+  padding: 0px 15px;
+  text-align: center;
+}
+
+table td:first-child {
+  /* second column */
+  text-align: left;
+}

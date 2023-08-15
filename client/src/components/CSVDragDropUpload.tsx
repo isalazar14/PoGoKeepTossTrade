@@ -1,5 +1,5 @@
 /* credit https://github.com/Bunlong/react-papaparse/blob/v4.0.0/examples/CSVReaderClickAndDragUpload.tsx */
-import React, { useState, CSSProperties } from 'react';
+import { useState, CSSProperties } from 'react';
 import { useCSVReader, lightenDarkenColor, formatFileSize } from 'react-papaparse';
 import { CustomConfig } from 'react-papaparse/dist/model';
 import { ParseResult } from 'papaparse'
@@ -77,36 +77,45 @@ const styles = {
   } as CSSProperties,
 };
 
-const csvReaderConfig: CustomConfig = {
-  // worker: true,
-  dynamicTyping: true,
-  skipEmptyLines: 'greedy',
-  // header: true,
-  transformHeader: cleanHeader,
-  error: handleParseError
+type GeneralObject = {
+  [key: string]: any
 }
 
-export default function CSVDropDropUpload() {
+type CSVDropDropUploadProps = {
+  config?: CustomConfig
+  // handleArrayResults?(headers, data: any[]): void
+  // handleObjectResults?(headers, data: any[]): void
+  handleResults?(headers: string[], data: any[][] | GeneralObject[]): void
+}
+
+export default function CSVDropDropUpload({ config, handleResults }: CSVDropDropUploadProps) {
   const { CSVReader } = useCSVReader();
   const [zoneHover, setZoneHover] = useState(false);
   const [removeHoverColor, setRemoveHoverColor] = useState(
     DEFAULT_REMOVE_HOVER_COLOR
   );
-  function handleUploadResults(results: ParseResult<any>) {
+  function handleUploadAccepted(results: ParseResult<any>) {
     console.log("---------------------------");
     console.log("File loaded successfully");
+    const { headers, data } = getHeadersAndData(results, config?.header ?? false)
     const startTime = performance.now()
-    if (csvReaderConfig.header) handleObjectResults(results)
-    else (handleArrayResults(results))
+    // if (config.header) {
+    //   if (!handleObjectResults) throw new Error("'header' set to true without 'handleObjectResults' callback");
+    //   handleObjectResults(headers, data)
+    // } else {
+    //   if (!handleArrayResults) throw new Error("'header' set to false without 'handlArrayResults' callback");
+    //   handleArrayResults(headers, data)
+    // }
+    if (handleResults) handleResults(headers, data)
     const endTime = performance.now()
-    console.log(`Time to process ${results.data.length} rows:`, endTime-startTime, "ms")
+    console.log(`Time to process ${results.data.length} rows:`, endTime - startTime, "ms")
     setZoneHover(false);
   }
 
 
   return (
     <CSVReader
-      onUploadAccepted={handleUploadResults}
+      onUploadAccepted={handleUploadAccepted}
       onDragOver={(event: DragEvent) => {
         event.preventDefault();
         setZoneHover(true);
@@ -115,7 +124,7 @@ export default function CSVDropDropUpload() {
         event.preventDefault();
         setZoneHover(false);
       }}
-      config={csvReaderConfig}
+      config={config}
     >
       {
         (
@@ -173,71 +182,24 @@ export default function CSVDropDropUpload() {
   );
 }
 
-function cleanHeader(header: string, index?: number) {
-  // console.log(header);
-  // const cleanHeader = header.toLowerCase().split(" ").join("_").trim().replace();
-  const reSpacesAndSlashes = /[\s/]/g
-  const reParentheses_CaptureInnerText = /\((.)\)/g
-  const cleanedHeader = header
-    .trim()
-    .toLowerCase()
-    .replace(reSpacesAndSlashes, "_")
-    .replace(reParentheses_CaptureInnerText, "$1")
-  // console.log(cleanedHeader);
-  return cleanedHeader
-}
-
-function handleArrayResults(results: ParseResult<any>) {
-  console.log("Array Results");
-  /* extract headers from first row, replace spaces with underscores, trim trailing whitespace; */
-  // let headersArr = results[0].meta.fields.map(cleanHeader);
-  const headers = results.data.shift().map(cleanHeader)
+function getHeadersAndData(results: ParseResult<any>, areHeadersSeparate: boolean) {
+  console.log("Results", results);
+  /* ENTRIES AS OBJECTS */
+  let headers
+  let data: any[]
+  if (areHeadersSeparate) {
+    console.log("Object Results");
+    headers = results.meta.fields
+    data = results.data
+  } else {
+    /* ENTRIES AS ARRAYS */
+    console.log("Array Results");
+    /* extract headers from first row */
+    headers = results.data.shift()
+    data = results.data
+  }
+ 
   console.log("Headers:", headers)
-  console.log("Data", results);
-
-
-  // /* convert headers array into object, with all fields set as true 
-  // Enable this section to allow users to turn on and off the fields they want to see */
-  // let headersObj = {};
-  // headersArr.forEach((field) => (headersObj[field] = true));
-  // /* add headers to fieldState */
-  // setFieldState(headersObj); // 
-
-  // /* reducer function to extract 'data' object from csv parsed rows, and filter out blank rows */
-  // let reducer = (rows, row) => {
-  //   if (row.errors.length === 0) {
-  //     // console.log("no errors", row.data);
-  //     rows.push(row.data);
-  //   }
-  //   return rows;
-  // };
-  // let dataRows = data.reduce(reducer, []);
-  // let dataArr = []
-  // let objToArrStart = console.time("objToArr")
-  // // dataRows.forEach((row)=>dataArr.push(Object.keys(row).map(key=>row[key])))
-  // dataRows.forEach((row) => dataArr.push(Object.values(row)))
-  // let objToArrEnd = console.timeEnd("objToArr")
-  // console.log("time to convert data obj to arr", objToArrEnd - objToArrStart);
-  // console.log("headers array", headers)
-  // console.log("headers object", headersObj)
-  // console.log("data array", dataArr)
-  // /* save array of pokemon data to pokelist state */
-  // // setPokeListState(dataRows);
-  // console.log("---------------------------");
-  // // navigate("results");
-}
-
-function handleObjectResults(results: ParseResult<any>) {
-  console.log("Object Results");
-  
-  const headers = results.meta.fields
-  const { data } = results
-  console.log("Headers:", headers)
-  console.log("Data:", data)
-}
-
-
-
-function handleParseError(err, file) {
-  console.error(err);
+  console.log("Data", data);
+  return { headers, data }
 }
