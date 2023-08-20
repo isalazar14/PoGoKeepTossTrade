@@ -204,11 +204,9 @@
     </table>
     <div id="results"></div>
   </div>
-
-  <!-- <script type="text/javascript">
-    document.body.append('HELLO FROM SCRIPT')
-  </script> -->
-  <script src="https://unpkg.com/gpu.js@latest/dist/gpu-browser.js"></script>
+  <!-- <script src="https://unpkg.com/gpu.js@latest/dist/gpu-browser.js"></script> -->
+  <script src="/tests/gpu-browser.js"></script>
+  <!-- <script src="/tests/gpu-browser.min.js"></script> -->
   <script src="https://unpkg.com/papaparse@5.3.0/papaparse.min.js"></script>
   <!-- <script src="./gpujsTestHelpers.js" type="module" crossorigin="anonymous"></script>
   <script src="./pokeCalcHelpers.js" type="module" crossorigin="anonymous"></script>
@@ -229,11 +227,13 @@
     // onmessage = (e) =>{
     //   const [gpuG, gpuC] = e.data
     // postMessage("in gpujsTestWorker.js")
+
     //#region INIT + GLOBAL VARS
+
     // console.log("running gpuTest");
     // displayHardwareSupport();
     let testParams = {
-      PF_BATCH_SIZE: 0 /* 0 = no limit */,
+      PF_BATCH_SIZE: 1 /* 0 = no limit */,
       IV_BATCH_SIZE: 0 /* 0 = no limit */,
       IV_FLOOR: 0,
       CP_LIMIT: 1500,
@@ -250,10 +250,9 @@
     let parseOptions = {
       /* USE ZERO OR ONE OPTION */
       // preview: testParams.PF_BATCH_SIZE,
-      /* [start, end] end-inclusive */
-      // pIdRange: [3, 3],
-      /* "pId, fId" */
+      pIdRange: [3, 3], /* [start, end] end-inclusive */
       // pfSelection: [
+      // /* "pId, fId" */
       //   "3,1",
       //   "6,1",
       //   "9,1"
@@ -563,12 +562,12 @@
           // }
           // console.log('gpu sort w/ for loop', performance.measure('gpu_sort').duration)
           // performance.clearMeasures('gpu_sort')
+          
           //#endregion SORT RESULTS
 
 
           //#endregion CPU CALCS
           //#endregion GPU CALCS
-          //#endregion RUN CALCS / PERF TESTS
 
           startBtn.innerHTML = "Run Again"
           testActiveSpinner.toggleAttribute('hidden')

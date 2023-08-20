@@ -62,7 +62,7 @@ export default function GpuSupportTable() {
         <tbody>
 
           {gpuFeatures.map((feature, i) =>
-            <GpuSupportTableRow feature={feature} key={i}/>
+            <GpuSupportTableRow feature={feature} key={feature.displayText}/>
           )}
 
         </tbody>

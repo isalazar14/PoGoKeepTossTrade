@@ -1,14 +1,13 @@
-import { GpuTestResultSet } from "../pages/GpuTest"
+import { GpuPerformanceTableProps } from "../types"
+import GpuPerformanceTableRow from "./GpuPerformanceTableRow"
 
-type GpuPerformanceTableProps = {
-  results: GpuTestResultSet
-}
+
 export default function GpuPerformanceTable({
-  results: {
+  testState: {
     getMaxValidCPMsAndStats,
     sortSPs,
     calcPercentSPs,
-  }}: GpuPerformanceTableProps)  {
+  } }: GpuPerformanceTableProps) {
 
   return (
     <>
@@ -23,6 +22,9 @@ export default function GpuPerformanceTable({
           </tr>
         </thead>
         <tbody>
+          <GpuPerformanceTableRow testDisplayName="Max Level w/ Stats" data={getMaxValidCPMsAndStats} key={"getMaxValidCPMsAndStats"}/>
+          <GpuPerformanceTableRow testDisplayName="Sort SPs" data={sortSPs} key={"sortSPs"}/>
+          <GpuPerformanceTableRow testDisplayName="Post-Sort Calcs" data={calcPercentSPs} key={"calcPercentSPs"}/>
           {/* <tr id="maxCalcCPMs">
               <td>Max calc CPMs</td>
               <td></td>
@@ -44,7 +46,7 @@ export default function GpuPerformanceTable({
               <td></td>
               <td></td>
             </tr> */}
-          <tr id="calcThenValidCPMs">
+          {/* <tr id="calcThenValidCPMs">
             <td>calc & valid CPMs<br /><small>(+ CP, HP, SP)</small></td>
             <td>{getMaxValidCPMsAndStats?.cpu}</td>
             <td>{getMaxValidCPMsAndStats?.gpu}</td>
@@ -61,7 +63,7 @@ export default function GpuPerformanceTable({
             <td>{calcPercentSPs?.cpu}</td>
             <td>{calcPercentSPs?.gpu}</td>
             <td>{calcPercentSPs?.cpuFallback}</td>
-          </tr>
+          </tr> */}
         </tbody>
       </table>
     </>

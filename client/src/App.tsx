@@ -6,8 +6,8 @@ import { Routes, Route, BrowserRouter } from 'react-router-dom'
 // import CSVDragDrop from './components/CSVDragDrop'
 import CSVResults from './components/CSVResults'
 // import CSVDragDropUpload from './components/CSVDragDropUpload'
-import GpuTestPage from './pages/GpuTest'
 import Home from './pages/Home'
+import GpuTestPage from './pages/GpuTest/GpuTestPage'
 
 
 export default function App() {

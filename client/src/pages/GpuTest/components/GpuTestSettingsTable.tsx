@@ -25,7 +25,7 @@ export default function GpuTestSettingsTable({ settings, setSettings }: GpuTestS
                 ? parseStringToNumArray(event.target.value, ",")
                 : event.target.value)
           }}
-          key={i}
+          key={settingName}
         />
       )
     })
@@ -68,10 +68,10 @@ function TestSettingsTableRow(props: TestSettingsTableRowProps) {
           background: "transparent",
           textAlign: "center"
         }}
-        value={dataSettingName != "targetLevels"
-          ? value
-          : (value as number[]).join(", ")}
-      />
+        value={Array.isArray(value)
+          ? value.join(", ")
+          : value
+        } />
     </td>
   </tr>
 }
