@@ -1,40 +1,59 @@
 import { GPU, IGPUKernelSettings, IKernelRunShortcutBase, KernelFunction, Texture } from "gpu.js";
-import { PokeCpmSet, PokeformBaseStats, PokeIv, PokeIvSet, PokeformFilterOption } from "./types";
+import { PokeCpmSet, PokeformBaseStats, PokeIv, PokeIvSet, PokeformFilterOption } from "../types";
+import { TestState, TestStatus,  } from "../types";
 
 //#region HELPER FUNCTIONS
-export function timeTest(calcName:string , calc:Function, options) {
+ export function timeTest<T extends (...args: any[]) => any>({ calcName, fn, silent, logPerformance, logResult }: {
+  calcName: string
+  fn: T
+  // fnArgs?: any[]
+  silent?: boolean
+  logPerformance?: boolean
+  logResult?: boolean
+}) {
   // let { useWorker, silentRun, logPerformance, logResult } = options
   // {targetEl, appendToEl, appendChildToEl}
-  if (!options?.silentRun)
+  if (!silent)
     console.log(`%cRunning ${calcName}`, "background-color:cornflowerblue;");
   const t0 = performance.now();
-  const calcResult = calc.fn.apply(null, calc.fnArgs);
+  const result = fn()
   const t1 = performance.now();
-  const dt = t1 - t0
-  if (options != undefined) {
-    if (!(options.logPerformance == false)) {
-      console.log(`${calcName} duration: ${Math.round(dt).toLocaleString()} ms`);
-    }
-    if (!options.logResult || !(options.logResult == false))
-      /* Log calc result by default. Explicitly disable */
-      console.log(`${calcName} result:\n`, calcResult);
-    if (options.logAlt)
-      console.log(`${calcName} alt result:\n`, options.logAlt);
-    if (options.renderPerformance) {
-      /* Do not render performance by default */
-      options.renderPerformance.targetEL.innerHTML = Math.round(dt).toLocaleString();
-      options.renderPerformance.targetEL.classList.toggle("running-calc");
-    }
-  }
-  if (!options?.silentRun)
+  const duration = t1 - t0
+
+  if (!(logPerformance == false))
+    console.log(`${calcName} duration: ${Math.round(duration).toLocaleString()} ms`);
+
+  /* Log result by default. Explicitly disable */
+  if (!(logResult == false))
+    console.log(`${calcName} result:\n`, result);
+  if (!silent)
     console.info(`%cFinished ${calcName}`, "background-color:orange; color:black");
-  return { calcResult, dt };
+  return { result, duration };
 }
 
-declare function getFullCpmList(floatCPMs: number[]): number[]
-declare function getFullCpmList(floatCPMs: number[], withLevels: 'array'): PokeCpmSet[]
-declare function getFullCpmList(floatCPMs: number[], withLevels: 'map'): Map<number, number>
+export function createTestState(initialStatus: TestStatus | undefined, initialResult: number | undefined): TestState {
+  return {
+    getMaxValidCPMsAndStats: {
+      cpu: { status: initialStatus, result: initialResult },
+      gpu: { status: initialStatus, result: initialResult },
+      cpuFallback: { status: initialStatus, result: initialResult },
+    },
+    sortSPs: {
+      cpu: { status: initialStatus, result: initialResult },
+      gpu: { status: initialStatus, result: initialResult },
+      cpuFallback: { status: initialStatus, result: initialResult },
+    },
+    calcPercentSPs: {
+      cpu: { status: initialStatus, result: initialResult },
+      gpu: { status: initialStatus, result: initialResult },
+      cpuFallback: { status: initialStatus, result: initialResult },
+    }
+  }
+}
 
+export function getFullCpmList(floatCPMs: number[]): number[]
+export function getFullCpmList(floatCPMs: number[], withLevels: 'array'): PokeCpmSet[]
+export function getFullCpmList(floatCPMs: number[], withLevels: 'map'): Map<number, number>
 export function getFullCpmList(floatCPMs: number[], withLevels?: 'array' | 'map') {
   const allCpms = _getFullCpmList(floatCPMs);
   if (!withLevels) return allCpms
@@ -133,7 +152,7 @@ export function getTotalStats(pfIdx: number, ivIdx: number, pokeForms: PokeformB
   return { a, d, s }
 }
 
-export function calculateCP([a, d, s, cpm]) {
+export function calculateCP([a, d, s, cpm]: [atk: number, def: number, sta: number, cpm: number]) {
   return Math.max(10, ((a * Math.sqrt(d) * Math.sqrt(s) * Math.pow(cpm, 2)) / 10) >> 0);
 }
 
@@ -146,7 +165,7 @@ export function saveAsFile(data, mimeType, filename) {
   URL.revokeObjectURL(a.href)
 }
 
-export function compareCpuGpuResults_pfIvLevelsSPsAtCpLimit(cpuResults, gpuResults) {
+export function compareCpuGpuResults_pfIvLevelsSPs(cpuResults, gpuResults) {
   let cols = ["level", "cp", "hp", "sp"]
   const differences = {}
   let maxPfIdx = (testParams.PF_BATCH_SIZE || testParams.DEFAULT_PF_BATCH_SIZE)
@@ -183,31 +202,6 @@ export function compareCpuGpuResults_pfIvLevelsSPsAtCpLimit(cpuResults, gpuResul
   console.log("non-SP differences:", nonSPdiffs)
 }
 
-export function warmupGpu(gpu: GPU, size: number, gpuName: string) {
-  const kernel = gpu.createKernel(function () {
-    // return this.thread.x * this.thread.y * this.thread.z * 3
-    return 0
-  }, {
-    output: [size, size],
-    pipeline: true,
-    // immutable: true
-    // optimizeFloatMemory: true,
-    tactic: "speed"
-
-  }).setOptimizeFloatMemory(true) /* must be set with method, settings prop does not work */
-
-  // console.log(`Warming up ${gpuName}`)
-  performance.mark(`${gpuName}WarmupStart`)
-  const output = kernel()
-  performance.mark(`${gpuName}WarmupEnd`)
-
-  performance.measure(`${gpuName} Warmup`, `${gpuName}WarmupStart`, `${gpuName}WarmupEnd`)
-  console.log(`${gpuName} Warmup duration:`, performance.getEntriesByName(`${gpuName} Warmup`)[0].duration)
-  if (output instanceof Texture) {
-    output.delete()
-    console.log(`Deleted ${gpuName} warmup memory`);
-  }
-}
 // export function getPokeForms(filePath, options) {
 //   /* CANNOT USE ASYNC/AWAIT BECAUSE 'parse' FUNCTION RETURNS 'void'.
 //   MUST USE 'complete' CALLBACK */
@@ -262,16 +256,20 @@ export function warmupGpu(gpu: GPU, size: number, gpuName: string) {
 //#endregion HELPER FUNCTIONS
 
 //#region CPU CALCS
-export function calcCpmsAtCpLimit_CPU(pokeForms: PokeformBaseStats[], ivs: PokeIvSet[], cpLimit: number) {
+export function calcCpmsAtCpLimit_CPU(
+  pokeForms: PokeformBaseStats[],
+  ivs: PokeIvSet[],
+  cpLimit: number
+) {
   const atkIdx = 2, defIdx = 3, staIdx = 4;
   const atkIvIdx = 1, defIvIdx = 2, staIvIdx = 3;
   const calcCpms = Array(pokeForms.length);
-  for (let pfIdx in pokeForms) {
+  for (const pfIdx in pokeForms) {
     calcCpms[pfIdx] = Array(ivs.length);
-    for (let ivIdx in ivs) {
-      let a = pokeForms[pfIdx][atkIdx] + ivs[ivIdx][atkIvIdx];
-      let d = pokeForms[pfIdx][defIdx] + ivs[ivIdx][defIvIdx];
-      let s = pokeForms[pfIdx][staIdx] + ivs[ivIdx][staIvIdx];
+    for (const ivIdx in ivs) {
+      const a = pokeForms[pfIdx][atkIdx] + ivs[ivIdx][atkIvIdx];
+      const d = pokeForms[pfIdx][defIdx] + ivs[ivIdx][defIvIdx];
+      const s = pokeForms[pfIdx][staIdx] + ivs[ivIdx][staIvIdx];
       calcCpms[pfIdx][ivIdx] = Math.sqrt(((cpLimit + 0.9999999) * 10) / (a * Math.sqrt(d) * Math.sqrt(s)));
     }
   }
@@ -284,7 +282,7 @@ export function calcCpmsAtCpLimit_CPU(pokeForms: PokeformBaseStats[], ivs: PokeI
   return calcCpms as number[][];
 }
 
-export function getMaxValidCpms_CPU(calcCpms: number[][], cpms: [number, number]) {
+export function getMaxValidCpms_CPU(calcCpms: number[][], cpms: [number, number][]) {
   const yLength = calcCpms.length; /* number of pokeforms (1 calcCPM set per pokemform) */
   const xLength = calcCpms[0].length; /* number of IV combos per pokeform */
   const lastCpmIdx = cpms.length - 1; /* starting point for reverse scan of CPMs (CPMs length depends on IV_BATCH size) */
@@ -308,14 +306,14 @@ export function getMaxValidCpms_CPU(calcCpms: number[][], cpms: [number, number]
   }
   return trueCpms;
 }
-export function getPfIvLevelsSPsAtCpLimit_CPU(cpLimit, pokeForms, ivs, cpms) {
-  const calcCpms = calcCpmsAtCpLimit_CPU(pokeForms, ivs, cpLimit)
+export function getPfIvLevelsSPsAtCpLimit_CPU(cpLimit: number, pokeforms: PokeformBaseStats[], ivs: PokeIvSet[], cpms: [number, number][]) {
+  const calcCpms = calcCpmsAtCpLimit_CPU(pokeforms, ivs, cpLimit)
   const yLength = calcCpms.length; /* number of pokeforms (1 calcCPM set per pokemform) */
   const xLength = calcCpms[0].length; /* number of IV combos per pokeform */
   const lastCpmIdx = cpms.length - 1; /* starting point for reverse scan of CPMs (CPMs length depends on IV_BATCH size) */
   /* create array to hold results, length = # of pokeforms */
   // const result = Array(yLength).fill(Array(xLength));
-  const result = Array(yLength);
+  const result: [number, number, number][][] = Array(yLength);
   /* loop through pokeforms */
   for (let y = 0; y < yLength; y++) {
     /* for each pokeform, create nested array for trueCPM results */
@@ -326,9 +324,9 @@ export function getPfIvLevelsSPsAtCpLimit_CPU(cpLimit, pokeForms, ivs, cpms) {
       /* for each calcCPM reverse scan CPMs to find max valid CPM (first CPM <= calcCPM) */
       for (let i = lastCpmIdx; i > -1; i--) {
         if (cpms[i][1] <= calcCpms[y][x]) {
-          const a = pokeForms[y][2] + ivs[x][1]
-          const d = pokeForms[y][3] + ivs[x][2]
-          const s = pokeForms[y][4] + ivs[x][3]
+          const a = pokeforms[y][2] + ivs[x][1]
+          const d = pokeforms[y][3] + ivs[x][2]
+          const s = pokeforms[y][4] + ivs[x][3]
           const cpm = cpms[i][1]
           const cp = Math.max(10, ((a * Math.sqrt(d) * Math.sqrt(s) * Math.pow(cpm, 2)) / 10) >> 0);
           const hp = Math.floor(s * cpm)
@@ -347,7 +345,12 @@ export function getPfIvLevelsSPsAtCpLimit_CPU(cpLimit, pokeForms, ivs, cpms) {
   }
   return result;
 }
-export function sortPfIVsAtCpLimit_CPU(pfIvLevelsSPs, pokeforms, ivs, cpms) {
+export function sortPfIVsAtCpLimit_CPU(
+  pfIvLevelsSPs: ReturnType<typeof getPfIvLevelsSPsAtCpLimit_CPU>,
+  pokeforms: PokeformBaseStats[],
+  ivs: PokeIvSet[],
+  cpms: [number, number][]
+) {
   /* modify idx vars below to match contents of validCPMsWithSPs entries */
   // let spColIdx = 3, cpIdx = 1, AtkIdx = 2 /* for entries as [level, cp, Atk, sp] */
   // let spColIdx = 3, pfIdx = 0, ivIdx = 1, cpmIdx = 2 /* for entries as [pfIdx, ivIdx, cpmIdx, sp] */
@@ -355,7 +358,7 @@ export function sortPfIVsAtCpLimit_CPU(pfIvLevelsSPs, pokeforms, ivs, cpms) {
   const atkBaseIdx = 2, defBaseIdx = 3, staBaseIdx = 4;
   const atkIvIdx = 1, defIvIdx = 2, staIvIdx = 3;
   for (const pfIdx in pfIvLevelsSPs) {
-    let aBase = pokeforms[pfIdx][atkBaseIdx],
+    const aBase = pokeforms[pfIdx][atkBaseIdx],
       dBase = pokeforms[pfIdx][defBaseIdx],
       sBase = pokeforms[pfIdx][staBaseIdx]
 
@@ -363,11 +366,11 @@ export function sortPfIVsAtCpLimit_CPU(pfIvLevelsSPs, pokeforms, ivs, cpms) {
       // return b[spColIdx] - a[spColIdx] || b[cpIdx] - a[cpIdx] || b[AtkIdx] - a[AtkIdx]
 
       /* compare SPs */
-      let c1 = b[spColIdx] - a[spColIdx]
+      const c1 = b[spColIdx] - a[spColIdx]
       if (c1) return c1
 
       /* get stats for further comparisons */
-      let statsB = [
+      const statsB = [
         aBase + ivs[b[ivIdx]][atkIvIdx], /* atk total */
         dBase + ivs[b[ivIdx]][defIvIdx], /* def total */
         sBase + ivs[b[ivIdx]][staIvIdx]  /* sta total */
@@ -381,13 +384,13 @@ export function sortPfIVsAtCpLimit_CPU(pfIvLevelsSPs, pokeforms, ivs, cpms) {
         , cpmA = cpms[a[cpmIdx]][1]
 
       /* compare CPs */
-      let cpB = Math.max(10, ((statsB[0] * Math.sqrt(statsB[1]) * Math.sqrt(statsB[2]) * Math.pow(cpmB, 2)) / 10) >> 0)
-      let cpA = Math.max(10, ((statsA[0] * Math.sqrt(statsA[1]) * Math.sqrt(statsA[2]) * Math.pow(cpmA, 2)) / 10) >> 0)
-      let c2 = cpB - cpA
+      const cpB = Math.max(10, ((statsB[0] * Math.sqrt(statsB[1]) * Math.sqrt(statsB[2]) * Math.pow(cpmB, 2)) / 10) >> 0)
+      const cpA = Math.max(10, ((statsA[0] * Math.sqrt(statsA[1]) * Math.sqrt(statsA[2]) * Math.pow(cpmA, 2)) / 10) >> 0)
+      const c2 = cpB - cpA
       if (c2) return c2
 
       /* compare Atk */
-      let AtkB = statsB[0] * cpmB
+      const AtkB = statsB[0] * cpmB
         , AtkA = statsA[0] * cpmA
       return AtkB - AtkA
     })
@@ -397,6 +400,32 @@ export function sortPfIVsAtCpLimit_CPU(pfIvLevelsSPs, pokeforms, ivs, cpms) {
 //#endregion CPU CALCS
 
 //#region GPU CALC FUNCTIONS
+export function warmupGpu(gpu: GPU, size: number, gpuName: string) {
+  const kernel = gpu.createKernel(function () {
+    // return this.thread.x * this.thread.y * this.thread.z * 3
+    return 0
+  }, {
+    output: [size, size],
+    pipeline: true,
+    // immutable: true
+    // optimizeFloatMemory: true,
+    tactic: "speed"
+
+  }).setOptimizeFloatMemory(true) /* must be set with method, settings prop does not work */
+
+  // console.log(`Warming up ${gpuName}`)
+  performance.mark(`${gpuName}WarmupStart`)
+  const output = kernel()
+  performance.mark(`${gpuName}WarmupEnd`)
+
+  performance.measure(`${gpuName} Warmup`, `${gpuName}WarmupStart`, `${gpuName}WarmupEnd`)
+  console.log(`${gpuName} Warmup duration:`, performance.getEntriesByName(`${gpuName} Warmup`)[0].duration)
+  if (output instanceof Texture) {
+    output.delete()
+    console.log(`Deleted ${gpuName} warmup memory`);
+  }
+}
+
 export function createKernel<KernelType extends KernelFunction>(
   gpu: GPU,
   kernelFn: typeof createKernel,
@@ -411,7 +440,8 @@ export function createKernel<KernelType extends KernelFunction>(
   & IKernelRunShortcutBase {
   return gpu.createKernel(kernelFn, kernelSettings);
 }
-export function calcCPs_GPU(pokeForms, ivs, cpms) {
+
+export function calcCPs_GPU(pokeForms: PokeformBaseStats[], ivs: PokeIvSet[], cpms: number[]) {
   // prettyier-ignore /* GPU.createKernel notes */
   {
     /**
@@ -446,17 +476,17 @@ export function calcCPs_GPU(pokeForms, ivs, cpms) {
     // )}
   }
   const atkBaseIdx = 2;
-  const defBaseIdx = 3;
+  const defBaseIdx = 3; 
   const staBaseIdx = 4;
   const atkIvIdx = 1;
   const defIvIdx = 2;
   const staIvIdx = 3;
   const { x, y, z } = this.thread;
   /*
-          x -> iterator for pokeform
-          y -> iterator for IVs
-          z -> iterator for CPMs
-         */
+    x -> iterator for pokeform
+    y -> iterator for IVs
+    z -> iterator for CPMs
+   */
   const a = pokeForms[z][atkBaseIdx] + ivs[y][atkIvIdx];
   const d = pokeForms[z][defBaseIdx] + ivs[y][defIvIdx];
   const s = pokeForms[z][staBaseIdx] + ivs[y][staIvIdx];
@@ -467,7 +497,8 @@ export function calcCPs_GPU(pokeForms, ivs, cpms) {
   // return [pokeForms[this.thread.z][2], ivs[this.thread.y][1], cpms[this.thread.x]]
   return [pokeForms[z][0], cpm, cp, sp];
 }
-export function calcCpmsAtCpLimit_GPU(cpLimit, pokeForms, ivs) {
+
+export function calcCpmsAtCpLimit_GPU(pokeforms: PokeformBaseStats[], ivs: PokeIvSet[], cpLimit: number) {
   if (cpLimit == 0) return 1
   const atkBaseIdx = 2, defBaseIdx = 3, staBaseIdx = 4;
   const atkIvIdx = 1, defIvIdx = 2, staIvIdx = 3;
@@ -476,9 +507,9 @@ export function calcCpmsAtCpLimit_GPU(cpLimit, pokeForms, ivs) {
         x -> iterator for pokeform
         y -> iterator for IVs
        */
-  const a = pokeForms[y][atkBaseIdx] + ivs[x][atkIvIdx];
-  const d = pokeForms[y][defBaseIdx] + ivs[x][defIvIdx];
-  const s = pokeForms[y][staBaseIdx] + ivs[x][staIvIdx];
+  const a = pokeforms[y][atkBaseIdx] + ivs[x][atkIvIdx];
+  const d = pokeforms[y][defBaseIdx] + ivs[x][defIvIdx];
+  const s = pokeforms[y][staBaseIdx] + ivs[x][staIvIdx];
   const calcCpm = Math.sqrt(((cpLimit + 0.9999999) * 10) / (a * Math.sqrt(d) * Math.sqrt(s)));
   // debugger;
   return calcCpm;
@@ -491,12 +522,14 @@ export function calcCpmsAtCpLimit_GPU(cpLimit, pokeForms, ivs) {
 * @param {boolean} returnLevel If true, result includes level. If returnCPM is also true, result is 2D array
 * @returns
 */
+
 export function getMaxValidCpms_GPU(calcCpms, cpms, lastCpmIdx, returnCPM, returnLevel) {
   // debugger;
   // if (!returnCPM && !returnLevel)
   //   return;
   const { x, y } = this.thread;
-  /* x -> iterator for pokeform | y -> iterator for IVs*/
+  /* x -> iterator for pokeform
+     y -> iterator for IVs*/
   // let i = cpms.length - 1; /* can't use .length??  using lastCpmIdx param instead */
   let i = lastCpmIdx
   while (i > -1 && calcCpms[y][x] < cpms[i][1]) {
@@ -510,7 +543,13 @@ export function getMaxValidCpms_GPU(calcCpms, cpms, lastCpmIdx, returnCPM, retur
       [current calcCPM, i, first cpm < calcCPM, corresponding level] */
   // return [calcCpms[y][x], i, cpms[i][1], cpms[i][0]]
 }
-export function getPfIvLevelsSPsAtCpLimit_GPU(cpLimit, pokeForms, ivs, cpms, lastCpmIdx) {
+
+export function getPfIvLevelsSPsAtCpLimit_GPU(
+  pokeForms: PokeformBaseStats[],
+  ivs: PokeIvSet[],
+  cpms: [level: number, cpm: number][],
+  cpLimit: number,
+  maxLevelIdx: number ) {
   // debugger;
   /* GET CALC CPMs AT CP LIMIT */
   // if (cpLimit == 0) return 1
@@ -529,7 +568,7 @@ export function getPfIvLevelsSPsAtCpLimit_GPU(cpLimit, pokeForms, ivs, cpms, las
   /* GET MAX VALID CPMs */
   // if (!returnCPM && !returnLevel)
   //   return;
-  let cpmIdx = lastCpmIdx
+  let cpmIdx = maxLevelIdx
   while (cpmIdx > -1 && calcCpm < cpms[cpmIdx][1]) {
     cpmIdx--;
   }
@@ -545,6 +584,7 @@ export function getPfIvLevelsSPsAtCpLimit_GPU(cpLimit, pokeForms, ivs, cpms, las
   // return [ivIdx, cpmIdx, sp] /* return [ivIdx, cpmIdx, sp] so that entries can be identified after sorting */
   return [ivIdx, sp, cp, A] /* return [ivIdx, sp, cp, A] so that entries can be identified after sorting, and so sorting on gpu doesn't need to perform lookups (since it already has cp and Atk for tie-breaking) */
 }
+
 export function sortPfIVsAtCpLimit_GPU(pfIvLevelsSP, pokeforms, ivs, cpms) {
   /* currently will not run due to unknown identifiers -> probably 'outputX' and 'result' */
   // debugger;
@@ -599,6 +639,7 @@ export function sortPfIVsAtCpLimit_GPU(pfIvLevelsSP, pokeforms, ivs, cpms) {
 }
 
 // function gpuOddEvenSort_oddPhase(input, spIdx, cpIdx, AtkIdx) {
+
 export function gpuOddEvenSort_oddPhase(input, spColIdx) {
   // debugger
   // let { y: pfIdx, x: el1Idx } = this.thread
@@ -634,6 +675,7 @@ export function gpuOddEvenSort_oddPhase(input, spColIdx) {
   // // return input[pfIdx][resultIdx ?? iv1Idx]
   // return input[pfIdx][resultIdx]
 }
+
 export function gpuOddEvenSort_evenPhase(input, spColIdx) {
   let { y: pfIdx, x: iv1Idx } = this.thread
   return input[pfIdx][iv1Idx]
@@ -650,6 +692,7 @@ export function gpuOddEvenSort_evenPhase(input, spColIdx) {
   // // return input[pfIdx][resultIdx ?? iv1Idx]
   // return input[pfIdx][resultIdx]
 }
+
 export function oddEvenSort_js(input, n) {
   /* https://www.geeksforgeeks.org/odd-even-sort-brick-sort/ */
   // let { y: pfIdx, x: ivIdx } = this.thread

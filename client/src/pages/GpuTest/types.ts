@@ -1,3 +1,5 @@
+import { IKernelFunctionThis } from 'gpu.js'
+
 export type PokeIv = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15
 export type PokeIvSet = [iv_id: number, atkIV: PokeIv, defIV: PokeIv, staIV: PokeIv];
 export type PokeCpmSet = [level: number, cpm: number];
@@ -48,7 +50,7 @@ export type TestData = {
 
 export type TestMethodData = Record<TestMethod, TestData>
 
-export type TestState = Record<TestName, TestMethodData> 
+export type TestState = Record<TestName, TestMethodData>
 
 
 export type GpuPerformanceTableRowProps = {
@@ -65,7 +67,7 @@ export type GpuPerformanceTableProps = {
   testState: TestState
 }
 
-export type GpuTestWorkerTask = 'gpuWarmup' | 'runTest'
+export type GpuTestWorkerTask = 'gpuWarmup' | 'runTest' | 'textureLoop'
 
 export type GpuTestWorkerTaskPayload = {
   testSettings: GpuTestSettings,
@@ -96,9 +98,19 @@ export type PokeformFilterOption =
   { limit?: never, pIdRange: [pIdStart: number, pIdEnd: number], pfSelection?: never } |
   { limit?: never, pIdRange?: never, pfSelection: [pokemonId: number, formId: number][] }
 
-export type TimeTestProps = {
-  calcName: string
-  fn: Function
-  fnArgs: any[]
-  logResult: boolean
+// export type TimeTestProps<T extends (...args: any[]) => any> = {
+//   calcName: string
+//   fn: T
+//   silent?: boolean
+//   logPerformance?: boolean
+//   logResult?: boolean
+// }
+
+export interface IGpuPokeConstants {
+  ivCount: number
 }
+
+export type GpuPokeThis =
+  IKernelFunctionThis & {
+    constants: IGpuPokeConstants
+  }

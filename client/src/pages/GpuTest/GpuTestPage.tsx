@@ -6,6 +6,7 @@ import GpuSupportTable from "./components/GpuSupportTable"
 import GpuTestSettingsTable from "./components/GpuTestSettingsTable"
 import { GpuTestSettings, PokeformCsvResults, TestStatus, GpuTestWorkerTaskProps, GpuTestWorkerResponse, TestState } from "./types"
 import './GpuTest.css'
+import { createTestState } from "./utils/GpuTestCore"
 
 // import { runTest } from "../util/gpuWorker"
 
@@ -27,40 +28,8 @@ const UNLIMITED_TEST_SETTINGS: GpuTestSettings = {
   targetLevels: [40, 41, 50, 51]
 }
 
-const UNDEFINED_TEST_STATE: TestState = {
-  getMaxValidCPMsAndStats: {
-    cpu: {status: undefined, result: undefined},
-    gpu: {status: undefined, result: undefined},
-    cpuFallback: {status: undefined, result: undefined},
-  },
-  sortSPs: {
-    cpu: {status: undefined, result: undefined},
-    gpu: {status: undefined, result: undefined},
-    cpuFallback: {status: undefined, result: undefined},
-  },
-  calcPercentSPs: {
-    cpu: {status: undefined, result: undefined},
-    gpu: {status: undefined, result: undefined},
-    cpuFallback: {status: undefined, result: undefined},
-  }
-}
-const MOCK_TEST_STATE: TestState = {
-  getMaxValidCPMsAndStats: {
-    cpu: {status: 'complete', result: 100},
-    gpu: {status: 'complete', result: 100},
-    cpuFallback: {status: 'complete', result: 100},
-  },
-  sortSPs: {
-    cpu: {status: 'complete', result: 100},
-    gpu: {status: 'complete', result: 100},
-    cpuFallback: {status: 'complete', result: 100},
-  },
-  calcPercentSPs: {
-    cpu: {status: 'complete', result: 100},
-    gpu: {status: 'complete', result: 100},
-    cpuFallback: {status: 'complete', result: 100},
-  }
-}
+const UNDEFINED_TEST_STATE: TestState = createTestState(undefined, undefined)
+const MOCK_COMPLETE_TEST_STATE: TestState = createTestState('complete', 100)
 
 let gpuTestWorker: Worker;
 
@@ -81,25 +50,33 @@ export default function GpuTestPage() {
     return () => clearInterval(interval)
   }, [])
 
+  useEffect(() => {
+    const worker = new Worker(new URL('./utils/textureLoopWorker.js', import.meta.url), {type: "module"})
+
+    worker.postMessage('run')
+
+    return () => worker.terminate()
+  }, [])
 
   useEffect(() => {
     /* create gpuTestWorker and warmup GPU */
-    gpuTestWorker = new Worker(new URL('./GpuTestWorker.ts', import.meta.url), { type: "module" })
-    const data: GpuTestWorkerTaskProps = { task: "gpuWarmup" }
-    gpuTestWorker.postMessage(data)
-    gpuTestWorker.onmessage = ({data: {testName, method, result}}: GpuTestWorkerResponse) => {
-      if (testName) {
-        setTestState(currentResults => {
-          return {
-            ...currentResults,
-            [testName]: {
-              ...currentResults[testName],
-              [method]: result
-            }
-          }
-        })
-      }
-    }
+    gpuTestWorker = new Worker(new URL('./utils/GpuTestWorker.ts', import.meta.url), { type: "module" })
+
+    // const data: GpuTestWorkerTaskProps = { task: "gpuWarmup" }
+    // gpuTestWorker.postMessage(data)
+    // gpuTestWorker.onmessage = ({data: {testName, method, result}}: GpuTestWorkerResponse) => {
+    //   if (testName) {
+    //     setTestState(currentResults => {
+    //       return {
+    //         ...currentResults,
+    //         [testName]: {
+    //           ...currentResults[testName],
+    //           [method]: result
+    //         }
+    //       }
+    //     })
+    //   }
+    // }
     return () => {
       gpuTestWorker.terminate()
     }
