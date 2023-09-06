@@ -3,46 +3,56 @@ import CSVDropDropUpload from "../../components/CSVDragDropUpload"
 import GenericErrorBoundary from "../../shared/components/GenericErrorBoundary"
 import GpuPerformanceTable from "./components/GpuPerformanceTable"
 import GpuSupportTable from "./components/GpuSupportTable"
-import GpuTestSettingsTable from "./components/GpuTestSettingsTable"
-import { GpuTestSettings, PokeformCsvResults, TestStatus, GpuTestWorkerTaskProps, GpuTestWorkerResponse, TestState } from "./types"
+import GpuTestSettingsTable from "./components/SettingsTable"
+import { TestSettings, PokeformCsvResults, TestStatus, GpuTestWorkerTaskProps, TestState, GpuTestWorkerResultProps } from "./types"
 import './GpuTest.css'
-import { createTestState } from "./utils/GpuTestCore"
+import { createTestState, getHeadersAndData } from "./utils/GpuTestCore"
+import Papa from "papaparse"
 
 // import { runTest } from "../util/gpuWorker"
 
-const CPU_CORE_COUNT = navigator.hardwareConcurrency
-const SMALL_TEST_SETTINGS: GpuTestSettings = {
-  pfBatchSize: 10,
-  ivBatchSize: 5,
-  cpLimit: 1500,
-  ivFloor: 10,
-  maxLevel: 40,
-  targetLevels: [40]
-}
-const UNLIMITED_TEST_SETTINGS: GpuTestSettings = {
-  pfBatchSize: 0,
-  ivBatchSize: 0,
-  cpLimit: 0,
-  ivFloor: 0,
-  maxLevel: 51,
-  targetLevels: [40, 41, 50, 51]
-}
+const CPU_CORE_COUNT = navigator.hardwareConcurrency,
+  TEST_SETTINGS_PRESETS = {
+    SMALL: {
+      pfBatchSize: 10,
+      ivBatchSize: 5,
+      cpLimits: [1500],
+      ivFloor: 10,
+      maxLevel: 40,
+      targetLevels: [40]
+    } as TestSettings,
+    UNLIMITED: {
+      pfBatchSize: 3,
+      ivBatchSize: 0,
+      cpLimits: [1500, 2500, 9999],
+      ivFloor: 0,
+      maxLevel: 51,
+      targetLevels: [40, 41, 50, 51]
+    } as TestSettings
+  },
+  TEST_STATE_PRESETS: Record<string, TestState> = {
+    UNDEFINED: createTestState(undefined, undefined),
+    MOCK: createTestState('complete', 100)
+  }
 
-const UNDEFINED_TEST_STATE: TestState = createTestState(undefined, undefined)
-const MOCK_COMPLETE_TEST_STATE: TestState = createTestState('complete', 100)
-
-let gpuTestWorker: Worker;
+let gpuTestWorker: Worker
+// const gpuTestWorker: Worker = new Worker(
+//   new URL('./utils/GpuTestWorker.ts', import.meta.url),
+//   { type: "module" })
 
 export default function GpuTestPage() {
-  const [currentTestSettings, setCurrentTestSettings] = useState<GpuTestSettings>(SMALL_TEST_SETTINGS)
+  const [currentTestSettings, setCurrentTestSettings] = useState<TestSettings>(TEST_SETTINGS_PRESETS.SMALL)
 
   const [isFileLoaded, setFileLoaded] = useState(false)
 
   const [csvResults, setCsvResults] = useState<PokeformCsvResults | null>(null)
 
-  const [testState, setTestState] = useState<TestState>(UNDEFINED_TEST_STATE)
+  const [testState, setTestState] = useState<TestState>(TEST_STATE_PRESETS.UNDEFINED)
+
+  const [testStatus, setTestStatus] = useState<TestStatus>("notStarted")
 
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString())
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date().toLocaleTimeString())
@@ -51,37 +61,77 @@ export default function GpuTestPage() {
   }, [])
 
   useEffect(() => {
-    const worker = new Worker(new URL('./utils/textureLoopWorker.js', import.meta.url), {type: "module"})
-
-    worker.postMessage('run')
-
-    return () => worker.terminate()
+    Papa.parse('/pokemon_forms.csv', {
+      download: true,
+      dynamicTyping: true,
+      skipEmptyLines: "greedy",
+      complete(results, file) {
+        const { data, headers } = getHeadersAndData(results, false)
+        if (data) {
+          setCsvResults({ pfHeaders: headers, pokeforms: data })
+          setFileLoaded(true)
+        }
+      },
+    })
   }, [])
 
   useEffect(() => {
-    /* create gpuTestWorker and warmup GPU */
-    gpuTestWorker = new Worker(new URL('./utils/GpuTestWorker.ts', import.meta.url), { type: "module" })
+    if (csvResults) console.log(csvResults)
+  }, [csvResults])
 
-    // const data: GpuTestWorkerTaskProps = { task: "gpuWarmup" }
-    // gpuTestWorker.postMessage(data)
-    // gpuTestWorker.onmessage = ({data: {testName, method, result}}: GpuTestWorkerResponse) => {
-    //   if (testName) {
-    //     setTestState(currentResults => {
-    //       return {
-    //         ...currentResults,
-    //         [testName]: {
-    //           ...currentResults[testName],
-    //           [method]: result
-    //         }
-    //       }
-    //     })
-    //   }
-    // }
+  // useEffect(() => { /* create gpujsPlayground Worker and listeners */
+  //   const playgroundWorker = new Worker(
+  //     new URL('./utils/gpujsPlaygroundWorker.js', import.meta.url),
+  //     { type: "module" }
+  //   )
+
+  //   return () => playgroundWorker.terminate()
+  // }, [])
+
+  useEffect(() => { /* create gpuTestWorker and listeners */
+    gpuTestWorker = new Worker(
+      new URL('./utils/GpuTestWorker.ts', import.meta.url),
+      { type: "module" }
+    )
+
+
+
+    gpuTestWorker.onmessage = ({ data }) => {
+      if (('result' as keyof GpuTestWorkerResultProps) in data) {
+        // console.log('received test result from worker', data)
+        const { testName, method, result } = data as GpuTestWorkerResultProps
+        setTestState(currentResults => {
+          // console.log('updating test state')
+          const newTestState = {
+            ...currentResults,
+            [testName]: {
+              ...currentResults[testName],
+              [method]: {
+                result: Math.round(result),
+                status: 'complete'
+              }
+            }
+          }
+          // console.log(newTestState)
+          return newTestState
+        })
+      }
+      else {
+        console.log('response from worker:', data)
+        if (data.task == 'runTest' && data.status == 'complete') {
+          setTestStatus("complete")
+        }
+      }
+    }
     return () => {
       gpuTestWorker.terminate()
     }
   }, [])
 
+  useEffect(() => { /* warmup GPU */
+    const data: GpuTestWorkerTaskProps = { task: "gpuWarmup" }
+    gpuTestWorker.postMessage(data)
+  }, [])
 
   function handlePokeformsCsvResults(pfHeaders, pokeForms) {
     /* TODO: implement pf range and selection */
@@ -106,17 +156,13 @@ export default function GpuTestPage() {
     //   result.data = filteredPFs;
 
 
-    setCsvResults({ pfHeaders, pokeForms } as PokeformCsvResults)
+    setCsvResults({ pfHeaders, pokeforms: pokeForms } as PokeformCsvResults)
     setFileLoaded(true)
   }
 
-
-  const [testStatus, setTestStatus] = useState<TestStatus>("notStarted")
-
-
   function runTest() {
-    console.log("Test Started")
-    if (!csvResults?.pokeForms) {
+
+    if (!csvResults?.pokeforms) {
       console.error("No pokeforms to test");
       return
     }
@@ -124,20 +170,18 @@ export default function GpuTestPage() {
       task: "runTest",
       payload: {
         testSettings: currentTestSettings,
-        pokeForms: csvResults?.pokeForms
+        pokeforms: csvResults?.pokeforms
       }
     }
     gpuTestWorker.postMessage(data)
-    gpuTestWorker.onmessage = (event: MessageEvent) => {
-      if (event.data) console.log('response from worker:', event.data)
-    }
+    setTestStatus("running")
   }
 
   return (
     <div id="content">
       <h1>GPU Test Page</h1>
       <p id='timeNow'>Current Time: {currentTime}</p>
-      <p id="cpuCores">CPU threads: {CPU_CORE_COUNT}</p>
+
       <CSVDropDropUpload
         handleResults={handlePokeformsCsvResults}
         config={{
@@ -155,8 +199,8 @@ export default function GpuTestPage() {
       {/* <input type="file" name="" id="file-input" onChange={importPokeGenieFile()} /> */}
       <GenericErrorBoundary>
         <GpuTestSettingsTable settings={currentTestSettings} setSettings={setCurrentTestSettings} />
-        <button type="reset" onClick={() => setCurrentTestSettings(UNLIMITED_TEST_SETTINGS)}>Large Test Settings</button>
-        <button type="reset" onClick={() => setCurrentTestSettings(SMALL_TEST_SETTINGS)}>Reset Settings</button>
+        <button type="reset" onClick={() => setCurrentTestSettings(TEST_SETTINGS_PRESETS.UNLIMITED)}>Large Test Settings</button>
+        <button type="reset" onClick={() => setCurrentTestSettings(TEST_SETTINGS_PRESETS.SMALL)}>Small Test Settings</button>
       </GenericErrorBoundary>
       {isFileLoaded &&
         <div className="d-flex justify-content-center" id="calcStatus">
@@ -171,7 +215,11 @@ export default function GpuTestPage() {
       </GenericErrorBoundary>
 
       <GenericErrorBoundary>
-        <GpuSupportTable />
+        <div>
+          <h2>Hardware Support</h2>
+          <h3 id="cpuCores">CPU threads: {CPU_CORE_COUNT}</h3>
+          <GpuSupportTable />
+        </div>
       </GenericErrorBoundary>
 
 

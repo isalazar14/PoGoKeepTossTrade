@@ -3,6 +3,7 @@ import { useState, CSSProperties } from 'react';
 import { useCSVReader, lightenDarkenColor, formatFileSize } from 'react-papaparse';
 import { CustomConfig } from 'react-papaparse/dist/model';
 import { ParseResult } from 'papaparse'
+import { getHeadersAndData } from '../pages/GpuTest/utils/GpuTestCore';
 
 const GREY = '#CCC';
 const GREY_DIM = '#686868';
@@ -180,26 +181,4 @@ export default function CSVDropDropUpload({ config, handleResults }: CSVDropDrop
         )}
     </CSVReader>
   );
-}
-
-function getHeadersAndData(results: ParseResult<any>, areHeadersSeparate: boolean) {
-  console.log("Results", results);
-  /* ENTRIES AS OBJECTS */
-  let headers
-  let data: any[]
-  if (areHeadersSeparate) {
-    console.log("Object Results");
-    headers = results.meta.fields
-    data = results.data
-  } else {
-    /* ENTRIES AS ARRAYS */
-    console.log("Array Results");
-    /* extract headers from first row */
-    headers = results.data.shift()
-    data = results.data
-  }
- 
-  console.log("Headers:", headers)
-  console.log("Data", data);
-  return { headers, data }
 }

@@ -51,7 +51,7 @@ export default function GpuSupportTable() {
 
   return (
     <>
-      <h2>GPU Support</h2>
+      <h3>GPU Support</h3>
       <table id="gpuSupport">
         <thead>
           <tr>

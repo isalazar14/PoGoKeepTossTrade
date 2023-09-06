@@ -1,5 +1,5 @@
-import { GpuPerformanceTableProps } from "../types"
-import GpuPerformanceTableRow from "./GpuPerformanceTableRow"
+import { PerformanceTableProps } from "../types"
+import PerformanceTableRow from "./PerformanceTableRow"
 
 
 export default function GpuPerformanceTable({
@@ -7,7 +7,7 @@ export default function GpuPerformanceTable({
     getMaxValidCPMsAndStats,
     sortSPs,
     calcPercentSPs,
-  } }: GpuPerformanceTableProps) {
+  } }: PerformanceTableProps) {
 
   return (
     <>
@@ -22,9 +22,9 @@ export default function GpuPerformanceTable({
           </tr>
         </thead>
         <tbody>
-          <GpuPerformanceTableRow testDisplayName="Max Level w/ Stats" data={getMaxValidCPMsAndStats} key={"getMaxValidCPMsAndStats"}/>
-          <GpuPerformanceTableRow testDisplayName="Sort SPs" data={sortSPs} key={"sortSPs"}/>
-          <GpuPerformanceTableRow testDisplayName="Post-Sort Calcs" data={calcPercentSPs} key={"calcPercentSPs"}/>
+          <PerformanceTableRow testDisplayName="Max Level w/ Stats" data={getMaxValidCPMsAndStats} key={"getMaxValidCPMsAndStats"}/>
+          <PerformanceTableRow testDisplayName="Sort SPs" data={sortSPs} key={"sortSPs"}/>
+          <PerformanceTableRow testDisplayName="Post-Sort Calcs" data={calcPercentSPs} key={"calcPercentSPs"}/>
           {/* <tr id="maxCalcCPMs">
               <td>Max calc CPMs</td>
               <td></td>

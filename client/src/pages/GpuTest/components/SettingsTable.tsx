@@ -1,15 +1,18 @@
 import { ChangeEvent, Dispatch, SetStateAction, useCallback } from "react"
-import { GpuTestSettings } from "../pages/GpuTest"
+import { TestSettings } from "../types"
 
-type GpuTestSettingsTableProps = {
-  settings: GpuTestSettings
-  setSettings: Dispatch<SetStateAction<GpuTestSettings>>
+type SettingsTableProps = {
+  settings: TestSettings
+  setSettings: Dispatch<SetStateAction<TestSettings>>
 }
 
-export default function GpuTestSettingsTable({ settings, setSettings }: GpuTestSettingsTableProps) {
+export default function GpuTestSettingsTable({ settings, setSettings }: SettingsTableProps) {
   const setSettingsByKey = useCallback(
-    (settingName: keyof GpuTestSettings, value: any) => {
-      setSettings({ ...settings, [settingName]: value } as GpuTestSettings)
+    (settingName: keyof TestSettings, value: any) => {
+      setSettings(prevSettings => {
+        const newSettings = { ...prevSettings, [settingName]: value } as TestSettings
+        return newSettings
+      })
     }, [])
 
   const settingRows = Object.keys(settings)
@@ -17,13 +20,18 @@ export default function GpuTestSettingsTable({ settings, setSettings }: GpuTestS
       return (
         <TestSettingsTableRow
           label={settingName}
-          dataSettingName={settingName as keyof GpuTestSettings}
-          value={settings[settingName as keyof GpuTestSettings] ?? ""}
+          dataSettingName={settingName as keyof TestSettings}
+          value={(Array.isArray(settings[settingName as keyof TestSettings])
+            ? (settings[settingName as keyof TestSettings] as []).join(", ")
+            : settings[settingName as keyof TestSettings]
+          ) ?? ""}
           handleInput={(event: ChangeEvent<HTMLInputElement>) => {
-            setSettingsByKey(settingName as keyof GpuTestSettings,
-              settingName as keyof GpuTestSettings == "targetLevels"
+            setSettingsByKey(settingName as keyof TestSettings,
+              // settingName as keyof TestSettings == "targetLevels"
+              isNaN(+event.target.value)
                 ? parseStringToNumArray(event.target.value, ",")
-                : event.target.value)
+                : +event.target.value
+            )
           }}
           key={settingName}
         />
@@ -52,7 +60,7 @@ export default function GpuTestSettingsTable({ settings, setSettings }: GpuTestS
 type TestSettingsTableRowProps = {
   label: string,
   value: string | number | any[],
-  dataSettingName: keyof GpuTestSettings,
+  dataSettingName: keyof TestSettings,
   handleInput: (event: ChangeEvent<HTMLInputElement>) => void
 }
 
@@ -61,12 +69,13 @@ function TestSettingsTableRow(props: TestSettingsTableRowProps) {
   return <tr>
     <td>{label}</td>
     <td data-settingname={dataSettingName} style={{}}>
-      <input type="text"
+      <input type="number"
         onChange={handleInput}
+        inputMode="numeric"
         style={{
-          border: "none",
+          // border: "none",
           background: "transparent",
-          textAlign: "center"
+          textAlign: "center",
         }}
         value={Array.isArray(value)
           ? value.join(", ")
@@ -77,7 +86,7 @@ function TestSettingsTableRow(props: TestSettingsTableRowProps) {
 }
 
 function parseStringToNumArray(input: string, delimeter: string) {
-  const nums = input.replace(/\s/g, "")
+  const nums = input.replace(/\s{2,}/g, " ")
     .split(delimeter)
     .map(value => {
       const num = parseInt(value)

@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const { resolve } = require("path");
-const https = require('https');
+// const https = require('https');
 const fs = require('fs');
 
 
@@ -18,7 +18,7 @@ app.use(
 app.use('/js', express.static('./'))
 app.use('/data', express.static('../server/public/data'))
 app.get('/gputest', (req, res) => {
-	res.sendFile(resolve('./gpujsTest.html'), err => console.log(err))
+	res.sendFile(resolve('./tests/gpujsTest.html'), err => console.log(err))
 })
 
 const port = 8000;

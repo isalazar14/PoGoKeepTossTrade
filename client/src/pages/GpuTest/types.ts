@@ -10,15 +10,18 @@ export type PokeformBaseStats = [
   baseDef: number,
   baseSta: number
 ];
+export type PokeformTotalStats = { tAtk: number, tDef: number, tSta: number }
+export type PokeformTotalStatsArray = [tAtk: number, tDef: number, tSta: number]
+
 export type PokeformCsvResults = {
-  pfHeaders: string[]
-  pokeForms: PokeformBaseStats[]
+  pfHeaders: string[] | undefined
+  pokeforms: PokeformBaseStats[]
 }
 
-export type GpuTestSettings = {
+export type TestSettings = {
   pfBatchSize?: number | undefined,
   ivBatchSize?: number | undefined,
-  cpLimit?: number | undefined,
+  cpLimits?: number[] | undefined,
   ivFloor?: PokeIv | undefined,
   maxLevel?: number | undefined,
   targetLevels?: number[] | undefined
@@ -53,25 +56,25 @@ export type TestMethodData = Record<TestMethod, TestData>
 export type TestState = Record<TestName, TestMethodData>
 
 
-export type GpuPerformanceTableRowProps = {
+export type PerformanceTableRowProps = {
   testDisplayName: string
   data: TestMethodData
 }
 
-export type GpuPerformanceTableCellProps = {
+export type PerformanceTableCellProps = {
   testStatus: TestStatus
   result?: number
 }
 
-export type GpuPerformanceTableProps = {
+export type PerformanceTableProps = {
   testState: TestState
 }
 
 export type GpuTestWorkerTask = 'gpuWarmup' | 'runTest' | 'textureLoop'
 
 export type GpuTestWorkerTaskPayload = {
-  testSettings: GpuTestSettings,
-  pokeForms: PokeformBaseStats[]
+  testSettings: TestSettings,
+  pokeforms: PokeformBaseStats[]
 }
 
 export type GpuTestWorkerTaskProps = {
@@ -83,20 +86,22 @@ export interface GpuTestWorkerTaskMessage extends MessageEvent {
   data: GpuTestWorkerTaskProps
 }
 
-export type GpuTestWorkerResponseProps = {
+export type GpuTestWorkerResultProps = {
   testName: TestName
   method: TestMethod
   result: number
 }
 
 export interface GpuTestWorkerResponse extends MessageEvent {
-  data: GpuTestWorkerResponseProps
+  data: GpuTestWorkerResultProps
 }
 
 export type PokeformFilterOption =
-  { limit: number, pIdRange?: never, pfSelection?: never } |
-  { limit?: never, pIdRange: [pIdStart: number, pIdEnd: number], pfSelection?: never } |
-  { limit?: never, pIdRange?: never, pfSelection: [pokemonId: number, formId: number][] }
+  // { limit: number, pIdRange?: never, pfSelection?: never } |
+  // { limit?: never, pIdRange: [pIdStart: number, pIdEnd: number], pfSelection?: never } |
+  // { limit?: never, pIdRange?: never, pfSelection: [pokemonId: number, formId: number][] }
+  { range: [pIdStart: number, pIdEnd: number], selection?: never } |
+  { range?: never, selection: [pokemonId: number, formId: number][] }
 
 // export type TimeTestProps<T extends (...args: any[]) => any> = {
 //   calcName: string

@@ -1,4 +1,4 @@
-import { GpuPerformanceTableCellProps, TestData } from "../types"
+import { PerformanceTableCellProps, TestData } from "../types"
 
 export default function GpuPerformanceTableCell({ status, result }: TestData) {
 

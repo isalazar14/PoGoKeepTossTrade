@@ -3,6 +3,7 @@
     "@types/papaparse": "^5.3.5",
     "duckdb": "^0.4.0",
     "gpu.js": "^2.15.2",
+    "nodemon": "^3.0.1",
     "papaparse": "^5.3.2"
   }
 }

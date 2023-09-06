@@ -1,7 +1,7 @@
-import { GpuPerformanceTableRowProps } from "../types";
+import { PerformanceTableRowProps } from "../types";
 import GpuPerformanceTableCell from "./GpuPerformanceTableCell";
 
-export default function GpuPerformanceTableRow({ testDisplayName, data }: GpuPerformanceTableRowProps) {
+export default function PerformanceTableRow({ testDisplayName, data }: PerformanceTableRowProps) {
 
   return (
     <tr>
