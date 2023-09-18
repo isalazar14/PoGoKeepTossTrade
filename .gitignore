@@ -11,7 +11,11 @@ cert
 
 # folders not needed for project
 */data
+<<<<<<< Updated upstream
 frontendCalcsDemo
+=======
+**/frontendCalcsDemo
+>>>>>>> Stashed changes
 pokeapi
 exports
 pokeGenie
