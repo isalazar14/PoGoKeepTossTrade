@@ -1,8 +1,14 @@
+/* NOT USED AFTER SWITCHING TO VITE AND REACT-PAPAPARSE v4
+  COPIED ESSENTIAL PARTS TO CSVDRAGDROPUPLOAD.TSX
+  KEPT THIS FOR REFERENCE OF PREVIOUS STATE, CONTEXT, AND CALLBACKS
+    UNTIL THEY'RE IMPLEMENTED IN NEW APP.TSX
+ */
+
 import React, { useContext } from "react";
 import { CSVReader } from "react-papaparse";
 import { navigate } from "@reach/router";
 import Context from "../context/Context";
-import DbWorker from "workerize-loader!../util/dbWorker.js"; // eslint-disable-line import/no-webpack-loader-syntax
+// import DbWorker from "workerize-loader!../util/dbWorker.js"; // eslint-disable-line import/no-webpack-loader-syntax
 
 const CVSDragDrop = () => {
   const { setPokeListState, setFieldState } = useContext(Context);

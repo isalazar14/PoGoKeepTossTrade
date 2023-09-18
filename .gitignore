@@ -3,11 +3,15 @@
 _gsdata_
 
 # custom tags for individual files/folders
+*_gitignore
 *_gitignore*
+
+# secrets
+cert
 
 # folders not needed for project
 */data
-*/frontendCalcsDemo
+frontendCalcsDemo
 pokeapi
 exports
 pokeGenie
