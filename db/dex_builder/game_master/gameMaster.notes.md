@@ -1,6 +1,6 @@
 ### Notes on game master structure and contents
 
-FAMILIES
+#### FAMILIES
 	"templateId": "V[POKEMON-4-digit-id]_FAMILY_[POKEMON-name-id]",
 		"data": {
 			"templateId": "V0001_FAMILY_BULBASAUR",
@@ -12,17 +12,23 @@ FAMILIES
 		}
 
 
-FORMS // list of available forms for each pokemon; only value info is isCostume data for full pokemon entries (e.g. bulbasaur fall 2019)
-	"templateId": "FORMS_V[4-digit-id]_POKEMON_[name-id]"
+#### FORMS 
+- form entries exist for all pokemon and forms (non-forms, normal-form, regionals, costumes, events, etc)
+- can be used to enumerate all pokemon without forms, with only normal forms, and with one or more forms
+- needed to identify pokemon with underscore in their name (e.g. Ho-oh), using path: data.formSettings.pokemon
+{
+  "templateId": "FORMS_V[4-digit-id]_POKEMON_[name-id]"
 	data
 		formSettings
 			pokemon: [NAME_ID]
 			forms []
 				form: [NAME_ID]_[FORM]
 				isCostume
+}
 
-POKEMON ENTRIES // full data for each pokemon form
-	"templateId": "V[POKEMON-4-digit-id]_POKEMON_[POKEMON-name-id]"
+#### POKEMON ENTRIES 
+// full data for each pokemon form
+	"templateId": "V[POKEMON-4-digit-id]_POKEMON_[POKEMON-name-id]_[FORM]"
 	data
 		formSettings
 			pokemon: [NAME_ID]
@@ -154,7 +160,7 @@ POKEMON ENTRIES // full data for each pokemon form
 		}
 	}
 
-MEGA EVOS
+#### MEGA EVOS
 	templateId": "TEMPORARY_EVOLUTION_V0006_POKEMON_CHARIZARD",
 	"temporaryEvolutionSettings": {
 		"pokemonId": "CHARIZARD",
