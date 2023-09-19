@@ -16,6 +16,7 @@
 - form entries exist for all pokemon and forms (non-forms, normal-form, regionals, costumes, events, etc)
 - can be used to enumerate all pokemon without forms, with only normal forms, and with one or more forms
 - needed to identify pokemon with underscore in their name (e.g. Ho-oh), using path: data.formSettings.pokemon
+- "Normal" forms seem to correspond to pokemon that have dark counterparts.
 {
   "templateId": "FORMS_V[4-digit-id]_POKEMON_[name-id]"
 	data
