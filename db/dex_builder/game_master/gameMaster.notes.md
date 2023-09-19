@@ -1,4 +1,6 @@
 ### Notes on game master structure and contents
+Entry category most easily identified by path "entry.data[categoryKey]" where "categoryKey" is the key of entry.data that is NOT "templateId"
+(e.g. pokemonFamily, formSettings, pokemonSettings, etc)
 
 #### FAMILIES
 	"templateId": "V[POKEMON-4-digit-id]_FAMILY_[POKEMON-name-id]",
