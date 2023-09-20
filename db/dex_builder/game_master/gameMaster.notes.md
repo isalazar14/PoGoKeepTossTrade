@@ -1,258 +1,138 @@
 ### Notes on game master structure and contents
-Entry category most easily identified by path "entry.data[categoryKey]" where "categoryKey" is the key of entry.data that is NOT "templateId"
-(e.g. pokemonFamily, formSettings, pokemonSettings, etc)
+Entry category most easily identified by path "entry.data[categoryKey]" where "categoryKey" is the key of entry.data that is NOT "templateId" (e.g. pokemonFamily, formSettings, pokemonSettings, **etc**)
+See official pokeminers game master explorer: https://pokeminers.com/gmexplore/
 
 #### FAMILIES
-	"templateId": "V[POKEMON-4-digit-id]_FAMILY_[POKEMON-name-id]",
-		"data": {
-			"templateId": "V0001_FAMILY_BULBASAUR",
-			"pokemonFamily": {
-				"familyId": "FAMILY_BULBASAUR",
-				"candyPerXlCandy": 100,
-				"megaEvolvablePokemonId": "VENUSAUR"
-			}
-		}
+entry.templateId == "V[NUMBER]_FAMILY_[NAME]"
 
+entry.data.pokemonFamily
+ - .familyId == "FAMILY_[FAMILY_NAME]
+ - .candyPerXlCandy
+ - .megaEvolvablePokemonId
 
 #### FORMS 
 - form entries exist for all pokemon and forms (non-forms, normal-form, regionals, costumes, events, etc)
 - can be used to enumerate all pokemon without forms, with only normal forms, and with one or more forms
-- needed to identify pokemon with underscore in their name (e.g. Ho-oh), using path: data.formSettings.pokemon
-- "Normal" forms seem to correspond to pokemon that have dark counterparts.
-{
-  "templateId": "FORMS_V[4-digit-id]_POKEMON_[name-id]"
-	data
-		formSettings
-			pokemon: [NAME_ID]
-			forms []
-				form: [NAME_ID]_[FORM]
-				isCostume
-}
+- needed to identify pokemon with underscore in their name (e.g. Ho-oh), using path: data.formSettings.
 
-#### POKEMON ENTRIES 
-// full data for each pokemon form
-	"templateId": "V[POKEMON-4-digit-id]_POKEMON_[POKEMON-name-id]_[FORM]"
-	data
-		formSettings
-			pokemon: [NAME_ID]
-			forms []
-				form: [NAME_ID]_[FORM]
-				isCostume
+entry.templateId == "FORMS_V[NUMBER]_POKEMON_[NAME]"
 
-	"templateId": "V0001_POKEMON_BULBASAUR",
-	"data": {
-		"templateId": "V0001_POKEMON_BULBASAUR",
-		"pokemonSettings": {
-			"pokemonId": "BULBASAUR",
-			"type": "POKEMON_TYPE_GRASS",
-			"type2": "POKEMON_TYPE_POISON",
-			"stats": {
-				"baseStamina": 128,
-				"baseAttack": 118,
-				"baseDefense": 111
-			},
-			"quickMoves": [
-				"VINE_WHIP_FAST",
-				"TACKLE_FAST"
-			],
-			"cinematicMoves": [
-				"SLUDGE_BOMB",
-				"SEED_BOMB",
-				"POWER_WHIP"
-			],
-			"evolutionIds": [
-				"IVYSAUR"
-			],
-			"evolutionPips": 1,
-			"rarity": "POKEMON_RARITY_LEGENDARY", // ONLY LEGENDARY/MYTHICAL POKEMON
-			"parentPokemonId": "PIDGEY",
-			"familyId": "FAMILY_BULBASAUR",
-			"candyToEvolve": 25,
-			"kmBuddyDistance": 3,
-			"evolutionBranch": [
-				{
-					"evolution": "IVYSAUR",
-					"candyCost": 25,
-					"form": "IVYSAUR_NORMAL",
-					"obPurificationEvolutionCandyCost": 22
-					"genderRequirement": "FEMALE",
-					"evolutionItemRequirement": "ITEM_SUN_STONE",
-					"lureItemRequirement": "ITEM_TROY_DISK_MAGNETIC",
-					"kmBuddyDistanceRequirement": 10,
-					"mustBeBuddy": true,
-					"onlyDaytime": true,
-					"priority": 100,
-					"questDisplay": [
-						{
-							"questRequirementTemplateId": "ESPEON_EVOLUTION_QUEST"
-						}
-					]
-				},
-				{
-					"temporaryEvolution": "TEMP_EVOLUTION_MEGA",
-					"temporaryEvolutionEnergyCost": 100,
-					"temporaryEvolutionEnergyCostSubsequent": 20
-				}
-			],
-			"buddyScale": 19,
-			"thirdMove": {
-				"stardustToUnlock": 10000,
-				"candyToUnlock": 25
-			},
-			"isTransferable": true,
-			"isDeployable": true,
-			"isTradable": true,
-			"shadow": {
-				"purificationStardustNeeded": 3000,
-				"purificationCandyNeeded": 3,
-				"purifiedChargeMove": "RETURN",
-				"shadowChargeMove": "FRUSTRATION"
-			},
-			"buddyGroupNumber": 2,
-			"buddyWalkedMegaEnergyAward": 15,
-			"eliteQuickMove": [
-			"WING_ATTACK_FAST",
-			"GUST_FAST"
-		],
-		"eliteCinematicMove": [
-			"AIR_CUTTER"
-		],
-		"tempEvoOverrides": [
-			{
-				"tempEvoId": "TEMP_EVOLUTION_MEGA",
-				"stats": {
-					"baseStamina": 195,
-					"baseAttack": 280,
-					"baseDefense": 175
-				},
-				"averageHeightM": 2.2,
-				"averageWeightKg": 50.5,
-				"typeOverride1": "POKEMON_TYPE_NORMAL",
-				"typeOverride2": "POKEMON_TYPE_FLYING",
-				"camera": {
-					"cylinderRadiusM": 2.5,
-					"cylinderHeightM": 1.65,
-					"cylinderGroundM": 1.2
-				},
-				"modelScaleV2": 0.97,
-				"modelHeight": 2.18,
-				"buddyOffsetMale": [
-					20.0,
-					-27.48,
-					-30.0
-				],
-				"buddyOffsetFemale": [
-					20.0,
-					-27.48,
-					-30.0
-				]
-			}
-		],
-		"buddyWalkedMegaEnergyAward": 5,
-		"formChange": [
-			{
-				"availableForm": [
-					"FURFROU_DEBUTANTE",
-					"FURFROU_MATRON",
-					"FURFROU_DANDY"
-				],
-				"candyCost": 25,
-				"stardustCost": 10000
-			}
-		]
-		}
-	}
+entry.data.formSettings
+- .pokemon
+- .forms[{}]?
+  - [i].form
+  - [i].isCostume?
+
+#### POKEMON ENTRIES
+entry.templateId == /^V.*_POKEMON_[A-Z]*_(.*)/
+
+entry.data.pokemonSettings
+- .familyId
+- .pokemonId
+- .form?
+- .stats.baseAttack
+- .stats.baseDefense
+- .stats.baseStamina
+- .type
+- .type2?
+- .parentPokemonId?
+- .evolutionIds[string]
+- .evolutionBranch[{}]?
+  - [i].evolution
+  - [i].form?
+  - [i].candyCost
+  - [i].noCandyCostViaTrade?
+  - [i].temporaryEvolution?
+  - [i].temporaryEvolutionEnergyCost?
+  - [i].temporaryEvolutionEnergyCostSubsequent?
+  - [i].tempEvoOverrides[{}]?
+    - [j].tempEvoId
+    - [j].stats.baseAttack
+    - [j].stats.baseDefense
+    - [j].stats.baseStamina
+    - [j].typeOverride1
+    - [j].typeOverride2
+  - [i].genderRequirement?
+  - [i].evolutionItemRequirement
+  - [i].lureItemRequirement
+  - [i].kmBuddyDistanceRequirement
+  - [i].questDisplay?[i].questRequirementTemplateId
+- .thirdMove.stardustToUnlock
+- .thirdMove.candyToUnlock
+- .pokemonClass // LEGENDARY/MYTHICAL
+- .formChange[{}]?
+  - [i].availableForm[string]
+  - [i].candyCost
+  - [i].stardustCost
+
+#### BRANCHED EVO CHAINS
+entry.data.obEvolutionChainDisplaySettings
+- ignore if ~.obChain.length == 1 (e.g. Mewtwo)
+- ignore if is trivial form
 
 #### MEGA EVOS
-	templateId": "TEMPORARY_EVOLUTION_V0006_POKEMON_CHARIZARD",
-	"temporaryEvolutionSettings": {
-		"pokemonId": "CHARIZARD",
-		"temporaryEvolutions": [
-			{
-				"temporaryEvolutionId": "TEMP_EVOLUTION_MEGA_X",
-				"assetBundleValue": 51
-			},
-			{
-				"temporaryEvolutionId": "TEMP_EVOLUTION_MEGA_Y",
-				"assetBundleValue": 52
-			}
-		]
+entry.templateId == TEMPORARY_EVOLUTION_V[NUMBER]_POKEMON_[NAME]
 
-SPAWN GENDER RATE
-	"templateId": "SPAWN_V0819_POKEMON_SKWOVET",
-	"genderSettings": {
-		"pokemon": "SKWOVET",
-		"gender": {
-			"malePercent": 0.5,
-			"femalePercent": 0.5
-		}
-noteworthy OBJECTS
-USER LEVEL REQUIREMENTS FOR SPECIAL CATEGORIES
-	templateId": "POKEDEX_CATEGORIES_SETTINGS",
-	"obPokedexCategoriesSettings": {
-		"featureEnabled": true,
-		"obSpecialCategories": [
-			{
-				"obPokedexCategory": "COSTUME",
-				"obCategoryObtainedUnlockRequirement": 1
-			},
-			{
-				"obPokedexCategory": "LUCKY",
-				"obCategoryObtainedUnlockRequirement": 10
-			},
-			{
-				"obPokedexCategory": "SHINY",
-				"obCategoryObtainedUnlockRequirement": 15
-			},
-			{
-				"obPokedexCategory": "SHINY_THREE_STAR",
-				"obCategoryObtainedUnlockRequirement": 50
-			},
-			{
-				"obPokedexCategory": "THREE_STAR",
-				"obCategoryObtainedUnlockRequirement": 10
-			},
-			{
-				"obPokedexCategory": "FOUR_STAR",
-				"obCategoryObtainedUnlockRequirement": 20
-			},
-			{
-				"obPokedexCategory": "SHADOW",
-				"obCategoryObtainedUnlockRequirement": 10
-			},
-			{
-				"obPokedexCategory": "PURIFIED",
-				"obCategoryObtainedUnlockRequirement": 10
-			}
-		]
-	}
-GENERAL UPGRADE REQUIREMENTS
-	"templateId": "POKEMON_UPGRADE_SETTINGS",
-	"pokemonUpgrades": {
-		"upgradesPerLevel": 2,
-		"allowedLevelsAbovePlayer": 10,
-		"candyCost": [1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4,6,6,8,8,10,10,12,12,15,0,0,0,0,0,0,0,0,0,0,0],
-		"stardustCost": [200,200,400,400,600,600,800,800,1000,1000,1300,1300,1600,1600,1900,1900,2200,2200,2500,2500,3000,3000,3500,3500,4000,4000,4500,4500,5000,5000,6000,6000,7000,7000,8000,8000,9000,9000,10000,10000,11000,11000,12000,12000,13000,13000,14000,14000,15000],
-		"shadowStardustMultiplier": 1.2,
-		"shadowCandyMultiplier": 1.2,
-		"purifiedStardustMultiplier": 0.9,
-		"purifiedCandyMultiplier": 0.9,
-		"maxNormalUpgradeLevel": 50,
-		"defaultCpBoostAdditionalLevel": 1,
-		"xlCandyMinPlayerLevel": 40,
-		"xlCandyCost": [10,10,12,12,15,15,17,17,20,20]
-	}
-}
+entry.data.pokemonFamily.megaEvolvablePokemonId
+- temporaryEvolutionSettings[{}]
+  - [i].temporaryEvolutionId // "TEMP_EVOLUTION_[TYPE]" => TYPE == MEGA[_X/Y] ||PRIMAL
 
-TYPE CHART (STRENGTHS/WEAKENESSES)
-	"templateId": "POKEMON_TYPE_[TYPE]",
-	"typeEffective": {
-		"attackScalar": [1.0,0.625,0.625,0.625,1.0,1.0,1.0,0.625,0.625,0.625,1.0,1.6,1.0,1.6,1.0,1.0,1.6,0.625],
-		"attackType": "POKEMON_TYPE_[TYPE]"
-	[TYPE] -> replace with any type
-	attackScalar order: [Normal,Fighting,Flying,Poison,Ground,Rock,Bug,Ghost,Steel,Fire,Water,Grass,Electric,Psychic,Ice,Dragon,Dark,Fairy]
 
-WEATHER BOOST TYPES
+#### PRIMAL EVOS
+entry.data.obPrimalEvoSettings
+
+#### SHADOW POKEMON INFO
+entry.data.pokemonSettings
+- .shadow?.purificationStardustNeeded
+- .shadow?.purificationCandyNeeded
+- .evolutionBranch?[i].obPurificationEvolutionCandyCost
+
+
+#### SPAWN GENDER RATE
+entry.templateId == SPAWN_V[NUMBER]_POKEMON_[NAME]"
+
+entry.data.genderSettings
+- .pokemon
+-	.gender
+  - .malePercent
+	- .femalePercent
+
+#### CPMs
+data.entry.playerLevel.cpMultiplier
+
+#### UPGRADES / POWER-UPS
+entry.templateId == "POKEMON_UPGRADE_SETTINGS"
+ 
+entry.data.pokemonUpgrades
+- .upgradesPerLevel: 2
+- .allowedLevelsAbovePlayer: 10
+- .candyCost: [1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4,6,6,8,8,10,10,12,12,15,0,0,0,0,0,0,0,0,0,0,0],
+- .stardustCost: [200,200,400,400,600,600,800,800,1000,1000,1300,1300,1600,1600,1900,1900,2200,2200,2500,2500,3000,3000,3500,3500,4000,4000,4500,4500,5000,5000,6000,6000,7000,7000,8000,8000,9000,9000,10000,10000,11000,11000,12000,12000,13000,13000,14000,14000,15000],
+- .shadowStardustMultiplier: 1.2,
+- .shadowCandyMultiplier: 1.2,
+- .purifiedStardustMultiplier: 0.9,
+- .purifiedCandyMultiplier: 0.9,
+- .maxNormalUpgradeLevel: 50,
+- .defaultCpBoostAdditionalLevel: 1,
+- .xlCandyMinPlayerLevel: 40,
+- .xlCandyCost: [10,10,12,12,15,15,17,17,20,20]
+
+#### FRIENDSHIP TRADING DISCOUNT
+- data.entry.friendshipMilestoneSettings.tradingDiscount
+
+#### LUCKY POKEMON STARDUST DISCOUNT
+- "templateId": "LUCKY_POKEMON_SETTINGS"
+- entry.data.luckyPokemonSettings.powerUpStardustDiscountPercent: 0.5
+
+#### TYPE CHART (STRENGTHS/WEAKENESSES)
+entry.templateId == POKEMON_TYPE_[TYPE_NAME]
+
+data.entry.typeEffective
+- typeEffective
+  - attackScalar: [1.0,0.625,0.625,0.625,1.0,1.0,1.0,0.625,0.625,0.625,1.0,1.6,1.0,1.6,1.0,1.0,1.6,0.625]
+    // attackScalar order: [Normal,Fighting,Flying,Poison,Ground,Rock,Bug,Ghost,Steel,Fire,Water,Grass,Electric,Psychic,Ice,Dragon,Dark,Fairy]
+
+#### WEATHER BOOST TYPES
 	"templateId": "WEATHER_AFFINITY_CLEAR",
 	"weatherAffinities": {
 		"weatherCondition": "CLEAR",
@@ -262,7 +142,7 @@ WEATHER BOOST TYPES
 			"POKEMON_TYPE_FIRE"
 		]
 
-WEATHER BOOST DETAILS
+#### WEATHER BOOST DETAILS
 	"templateId": "WEATHER_BONUS_SETTINGS",
 	"weatherBonusSettings": {
 		"cpBaseLevelBonus": 5,
@@ -273,7 +153,7 @@ WEATHER BOOST DETAILS
 		"raidEncounterGuaranteedIndividualValues": 10
 	}
 
-PVP SETTINGS, MODIFIERS
+#### PVP SETTINGS, MODIFIERS
 "templateId": "COMBAT_SETTINGS",
 "combatSettings": {
 	"roundDurationSeconds": 270.0,
@@ -303,7 +183,7 @@ PVP SETTINGS, MODIFIERS
 	"purifiedPokemonAttackMultiplierVsShadow": 1.0
 }
 
-COMBAT LEAGUES (PVP?)
+#### COMBAT LEAGUES (PVP?)
 	"templateId": "COMBAT_LEAGUE_SETTINGS",
 	"combatLeagueSettings": {
 		"combatLeagueTemplateId": [
@@ -371,58 +251,26 @@ COMBAT LEAGUES (PVP?)
 						bannedPokemon []
 							lists ditto and shedinja, then all legendaries
 
-SPECIAL EVOLUTION QUESTS/REQUIREMENTS
+#### EVOLUTION QUESTS/REQUIREMENTS
+- entry.data.evolutionQuestTemplate
+
 	"templateId": "[POKEMON_id]_EVOLUTION_QUEST"
-		data
+		data: {
+      evolutionQuestTemplate: {
 			questType
 				goals []
 					target
+      }
+    }
 
+#### DETECT BABIES
+1. entry.data.pokemonSettings.buddySize == "BUDDY_BABY"
+2. if no parentId (first in evo chain) && family != monName (family named )
+  - EXCEPT BABIES/FAMILIES with family name == baby name
+    - Tyrogue
+    - Togepi
 
-??? UNKNOWN MODIFIERS (BUT LOOKS LIKE RELATED TO POKEMON HOME)
-	"templateId": "ENERGY_COSTS_POKEMON_CLASS_LEGENDARY",
-	"pokemonHomeEnergyCosts": {
-		"pokemonClass": "POKEMON_CLASS_LEGENDARY",
-		"base": 1000,
-		"shiny": 9000,
-		"cp1001To2000": 300,
-		"cp2001ToInf": 500
-	}
-
-	"templateId": "ENERGY_COSTS_POKEMON_CLASS_MYTHIC",
-	"pokemonHomeEnergyCosts": {
-		"pokemonClass": "POKEMON_CLASS_MYTHIC",
-		"base": 2000,
-		"shiny": 8000,
-		"cp1001To2000": 500,
-		"cp2001ToInf": 700
-	}
-
-	"templateId": "ENERGY_COSTS_POKEMON_CLASS_NORMAL",
-	"pokemonHomeEnergyCosts": {
-		"base": 10,
-		"shiny": 1990,
-		"cp1001To2000": 100,
-		"cp2001ToInf": 300
-	}
-
-
-DETECT BABIES
-buddySize: "BUDDY_BABY"
-if no parentId (first in evo chain) && family != monName (family named )
-BABIES/FAMILIES with family name == baby name
-tyrogue
-togepi
-
-DETECT FORM NAME
-/^V.*_POKEMON_[A-Z]*_(.*)/
-Pokemon with "_" in name (can't use _ as name-form separator (e.g. bulbasaur_normal))
-MR_MIME
-HO_OH
-MIME_JR
-MR_RIME
-PORYGON_z
-
-SPECIAL FORMS
+#### SPECIAL FORMS
 ARCEUS_NORMAL
 FEMALE / MALE
+A (Mewtwo armoured)
