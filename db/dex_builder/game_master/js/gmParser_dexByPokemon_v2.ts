@@ -3,6 +3,83 @@ import path from "path";
 import axios from "axios";
 import { Pokedex, Pokemon, PokeForm, Family, ElementType } from "./dex.types";
 
+/* Steps
+  1A. Get non-pokemon data
+    families
+    - family
+    - candy_distance
+    - trade_evolve
+    - evo_cost_seq_id
+
+    types
+    - type
+
+    level data
+    - CPMs 
+    - upgrade candy costs // omit from db
+    - upgrade XL candy // omit from db
+    - upgrade stardust cost // omit from db
+    - total candy
+    - total XL candy
+    - total stardust
+   
+    leagues
+    - name
+    - maxCP
+
+    consts
+    - upgradeShadowStardustMultiplier
+    - upgradeShadowCandyMultiplier
+    - upgradePurifiedStardustMultiplier
+    - upgradePurifiedCandyMultiplier
+    - upgradeluckyStardustMultiplier // in "LUCKY_POKEMON_SETTINGS"
+    - maxNormalUpgradeLevel
+    - defaultCpBoostAdditionalLevel // buddy boost
+    - xlCandyMinPlayerLevel // level at which XL candy kicks in
+    - shadowPokemonAttackBonusMultiplier
+    - shadowPokemonDefenseBonusMultiplier
+    - friendshipTradingDiscountLevel2
+    - friendshipTradingDiscountLevel3
+    - friendshipTradingDiscountLevel4
+  
+  1B. Scan pokemon forms to identify trivial and non-trivial forms 
+
+  2. Get pokemon data
+    pokemon
+    - name 
+    - form // 'mega
+    - baseAttack
+    - baseDefense
+    - baseStamina
+    - type
+    - type2
+    - parentPokemonId
+    - family
+    
+    evolution
+    - pokemonId
+    - evoId
+    - candyCost
+    - isTradeEvo (noCandyCostViaTrade)
+    - requirement
+
+    legendary
+    - pokemonId
+
+    mythical
+    - pokemonId
+
+    babies
+    - pokemonId
+
+  3. Add data not specified in game master
+    - purification -> level 25 & +2 for each IV
+    - IV Floors // by friendship
+    - trade costs // trade type x friendship
+
+
+*/
+
 //#region CONSTS
 // const regionForms: string[] = ["ALOLA", "GALARIAN", "HISUIAN"]
 const trivialFormMons: string[] = [
@@ -20,13 +97,13 @@ const trivialFormMons: string[] = [
   "PYROAR" /* FEMALE */,
   "FURFROU",
   "MEOWSTIC" /* FEMALE */,
+  "FRILLISH" /* FEMALE */,
+  "JELLICENT" /* FEMALE */,
   // ,"CASTFORM",
   // "KELDEO"
 ];
 
 const nonTrivialFormMons: string[] = [
-  "FRILLISH" /* FEMALE */,
-  "JELLICENT" /* FEMALE */,
   "ROTOM",
   "GIRATINA",
   "SHAYMIN",
@@ -87,11 +164,11 @@ const dexMeta = {
   mythicals: new Map(),
   babies: new Map(),
   shadows: new Map(),
-  megas:  new Map(),
+  megas: new Map(),
   tradeEvos: new Map(),
   unTradeables: new Map(),
 };
-const dexErrors: {[key: string]: string}[] = [];
+const dexErrors: { [key: string]: string }[] = [];
 //#endregion
 
 //#region FUNCTIONS / HELPERS
@@ -147,7 +224,7 @@ async function getGameMaster(
   gmSourceType: "url" | "path",
   path?: string,
   url?: string
-): Promise<Array<{[key: string]: any}>> {
+): Promise<Array<{ [key: string]: any }>> {
   let gm: any[];
   return new Promise(async (resolve, reject) => {
     if (gmSourceType === "path") {
@@ -191,7 +268,7 @@ function processFamilyEntry(entry: any): void {
   let megaMon: string | undefined =
     entry.data.pokemonFamily.megaEvolvablePokemonId;
   if (megaMon !== undefined) {
-    dexMeta.megas.set(megaMon,null);
+    dexMeta.megas.set(megaMon, null);
   }
 }
 
@@ -245,8 +322,8 @@ function addPokeFormToDex(
   // gmTypes: { type1: string; type2?: string }
   [gmType1, gmType2]: [string, (string | undefined)?]
 ): // gmType1: string,
-// gmType2?: string
-void {
+  // gmType2?: string
+  void {
   let type1Str = gmType1.split("POKEMON_TYPE_")[1] as ElementType;
   let type1Id = typeNameIdMap.get(type1Str) as number;
   let types: [number, number?] = [type1Id];
@@ -413,14 +490,14 @@ function processPokeFormEntry(entry: any, dex: Pokedex): void {
         - entry.data.pokemonSettings.isTradable
       11) canFormChange
         - entry.data.pokemonSettings.formChange[{
-							"availableForm": [
-								"FURFROU_DEBUTANTE",
-								"FURFROU_MATRON",
-								"FURFROU_DANDY"
-							],
-							"candyCost": 25,
-							"stardustCost": 10000
-						}]
+              "availableForm": [
+                "FURFROU_DEBUTANTE",
+                "FURFROU_MATRON",
+                "FURFROU_DANDY"
+              ],
+              "candyCost": 25,
+              "stardustCost": 10000
+            }]
       */
 
   // if (entry.data.pokemonSettings.hasOwnProperty("")) {
@@ -491,65 +568,65 @@ function parseGM_buildDex(gameMaster: any[]) {
   // console.log("finished processing game master");
   console.timeEnd("gmParse");
 
-// console.error("errors...", dexErrors);
+  // console.error("errors...", dexErrors);
 
-/* TODO: 
-  fix forms
-    - mons with megas should have "NORMAL" form
-    - MEWTWO_A -> MEWTWO_ARMORED
+  /* TODO: 
+    fix forms
+      - mons with megas should have "NORMAL" form
+      - MEWTWO_A -> MEWTWO_ARMORED
+    
+    determine evoStage / relStage within each family
   
-  determine evoStage / relStage within each family
+    Verify dex data
+      - all mons have a family
+  */
 
-  Verify dex data
-    - all mons have a family
-*/
+  // console.log({
+  //   families: dex.families.length,
+  //   forms: dex.forms.length,
+  //   mons: dex.mons.length,
+  //   monForms: dex.monForms.length,
+  // });
+  //#endregion
 
-// console.log({
-//   families: dex.families.length,
-//   forms: dex.forms.length,
-//   mons: dex.mons.length,
-//   monForms: dex.monForms.length,
-// });
-//#endregion
+  //#region WRITE TO FILE/S
+  try {
+    /* write errors as json file */
+    console.time("writeErrors");
+    fs.writeFileSync(
+      path.join(__dirname, "/dexByPokemon.errors.json"),
+      JSON.stringify(dexErrors, null, 2) /* readable*/
+      // JSON.stringify(dex)) /* minified */
+    );
+    console.timeEnd("writeErrors");
+  } catch (err: any) {
+    console.error(err);
+  }
 
-//#region WRITE TO FILE/S
-try {
-  /* write errors as json file */
-  console.time("writeErrors");
-  fs.writeFileSync(
-    path.join(__dirname, "/dexByPokemon.errors.json"),
-    JSON.stringify(dexErrors, null, 2) /* readable*/
-    // JSON.stringify(dex)) /* minified */
-  );
-  console.timeEnd("writeErrors");
-} catch (err: any) {
-  console.error(err);
-}
+  try {
+    /* write dex as json file */
+    console.time("writeDex");
+    fs.writeFileSync(
+      path.join(__dirname, "/dexByPokemon.json"),
+      JSON.stringify(dex, stringifyMap, 2) /* readable*/
+      // JSON.stringify(dex)) /* minified */
+    );
+    console.timeEnd("writeDex");
+  } catch (err: any) {
+    console.error(err);
+  }
 
-try {
-  /* write dex as json file */
-  console.time("writeDex");
-  fs.writeFileSync(
-    path.join(__dirname, "/dexByPokemon.json"),
-    JSON.stringify(dex, stringifyMap, 2) /* readable*/
-    // JSON.stringify(dex)) /* minified */
-  );
-  console.timeEnd("writeDex");
-} catch (err: any) {
-  console.error(err);
-}
-
-try {
-  /* write forms as json file */
-  console.time("writeForms");
-  fs.writeFileSync(
-    path.join(__dirname, "/dexByPokemon.forms.json"),
-    JSON.stringify(formNameIdMap, stringifyMap, 2) /* readable*/
-    // JSON.stringify(dex)) /* minified */
-  );
-  console.timeEnd("writeForms");
-} catch (err: any) {
-  console.error(err);
-}
-//#endregion
+  try {
+    /* write forms as json file */
+    console.time("writeForms");
+    fs.writeFileSync(
+      path.join(__dirname, "/dexByPokemon.forms.json"),
+      JSON.stringify(formNameIdMap, stringifyMap, 2) /* readable*/
+      // JSON.stringify(dex)) /* minified */
+    );
+    console.timeEnd("writeForms");
+  } catch (err: any) {
+    console.error(err);
+  }
+  //#endregion
 })()
