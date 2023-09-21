@@ -11,6 +11,14 @@ import { Pokedex, Pokemon, PokeForm, Family, ElementType } from "./dex.types";
     - trade_evolve
     - evo_cost_seq_id
 
+    idendity forms to ignore
+    - costumes
+    - "copy"
+    - if Normal is only form
+    - Unown
+    - Spinda
+    - Arceus
+
     types
     - type
 
@@ -44,7 +52,7 @@ import { Pokedex, Pokemon, PokeForm, Family, ElementType } from "./dex.types";
   
   1B. Scan pokemon forms to identify trivial and non-trivial forms 
 
-  2. Get pokemon data
+  2. Get pokemon data: compare forms, skip trivial forms
     pokemon
     - name 
     - form // 'mega
