@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import axios from "axios";
-import { Pokedex, Pokemon, PokeForm, Family, ElementType } from "./dex.types";
+import { Pokedex, Pokemon, PokeForm, Family, ElementType } from "./types/dex";
 
 //#region CONSTS
 // const regionForms: string[] = ["ALOLA", "GALARIAN", "HISUIAN"]

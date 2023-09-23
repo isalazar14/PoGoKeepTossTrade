@@ -1,7 +1,14 @@
-import { GameMasterBaseEntry, GameMasterEntry, PokemonFamily, PokemonSettings, TypeEffective } from "./gameMaster.types";
-import { FormSettings } from "./gameMaster.types";
+import { readFileSync } from "fs";
+import { GameMasterBaseEntry, GameMasterEntry, PokemonFamily, PokemonSettings, TypeEffective } from "./types/gm.manual";
+import { FormSettings } from "./types/gm.manual"
+import { Convert } from "./types/gm.quicktype";
 
-export function objectsDifferAtPaths(obj1: NestedObject, obj2: NestedObject, paths: string[]): boolean {
+export function getGameMasterTyped(source: string) {
+  const gmJson = readFileSync(source, 'utf-8')
+  return Convert.toGameMasterEntry(gmJson)
+}
+
+export function objectsDifferAtPaths(obj1: GenericObject, obj2: GenericObject, paths: string[]): boolean {
   for (let path of paths) {
     let val1 = getNestedValue(obj1, path);
     let val2 = getNestedValue(obj2, path);
@@ -14,11 +21,11 @@ export function objectsDifferAtPaths(obj1: NestedObject, obj2: NestedObject, pat
   return false;
 }
 
-type NestedObject = {
+type GenericObject = {
   [key: string]: any;
 };
 
-function getNestedValue(obj: NestedObject | any[], path: string): any {
+function getNestedValue(obj: GenericObject | any[], path: string): any {
   const parts = path.split(/[\.\[\]]/).filter(Boolean);  // Split path on '.' and '[' and filter out empty parts and ']'
   return parts.reduce((acc: any, part: string) => {
     let index = isNaN(Number(part)) ? part : parseInt(part); // Convert array index to integer
@@ -38,7 +45,7 @@ function arraysDiffer(arr1: any[], arr2: any[]): boolean {
   return false;
 }
 
-function objectsDiffer(obj1: NestedObject, obj2: NestedObject): boolean {
+function objectsDiffer(obj1: GenericObject, obj2: GenericObject): boolean {
   for (let key in obj1) {
     if (typeof obj1[key] === 'object' && typeof obj2[key] === 'object') {
       if (Array.isArray(obj1[key]) && Array.isArray(obj2[key])) {

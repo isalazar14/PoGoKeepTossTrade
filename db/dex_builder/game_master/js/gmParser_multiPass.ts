@@ -83,12 +83,14 @@
     - trade costs // trade type x friendship
 */
 
-import { GameMaster } from "./gameMaster.types"
-import { getFamilyName, getTypeName, isFamilyEntry, isFormEntry, isPokemonEntry, isTypeEntry } from "./utils"
+// import { GameMaster } from "./types/gm.manual"
+import { GameMaster } from "./types/gm.quicktype"
+import { getFamilyName, getGameMasterTyped, getTypeName, isFamilyEntry, isFormEntry, isPokemonEntry, isTypeEntry } from "./utils"
 
 const
   gameMasterFilePath = '../gameMaster_2023_09_19.json',
-  gm = require(gameMasterFilePath) as GameMaster,
+  // gm = require(gameMasterFilePath) as GameMaster,
+  gm = getGameMasterTyped(gameMasterFilePath),
   knownUnwantedForms = ["NORMAL", "COPY", "UNOWN", "SPINDA", "ARCEUS", "SILVALLY"],
   dexData = {
     families: [] as string[],
