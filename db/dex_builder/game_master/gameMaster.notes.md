@@ -36,7 +36,7 @@ entry.data.pokemonSettings
 - .type
 - .type2?
 - .parentPokemonId?
-- .evolutionIds[string]
+- .evolutionIds?[string] // not always present even if evo exists
 - .evolutionBranch[{}]?
   - [i].evolution
   - [i].form?
@@ -45,13 +45,6 @@ entry.data.pokemonSettings
   - [i].temporaryEvolution?
   - [i].temporaryEvolutionEnergyCost?
   - [i].temporaryEvolutionEnergyCostSubsequent?
-  - [i].tempEvoOverrides[{}]?
-    - [j].tempEvoId
-    - [j].stats.baseAttack
-    - [j].stats.baseDefense
-    - [j].stats.baseStamina
-    - [j].typeOverride1
-    - [j].typeOverride2
   - [i].genderRequirement?
   - [i].evolutionItemRequirement
   - [i].lureItemRequirement
@@ -60,10 +53,18 @@ entry.data.pokemonSettings
 - .thirdMove.stardustToUnlock
 - .thirdMove.candyToUnlock
 - .pokemonClass // LEGENDARY/MYTHICAL
+- .tempEvoOverrides[{}]?
+  - [j].tempEvoId
+  - [j].stats.baseAttack
+  - [j].stats.baseDefense
+  - [j].stats.baseStamina
+  - [j].typeOverride1
+  - [j].typeOverride2
 - .formChange[{}]?
   - [i].availableForm[string]
   - [i].candyCost
   - [i].stardustCost
+- .camera // will be "{}" if not yet released in game
 
 #### BRANCHED EVO CHAINS
 entry.data.obEvolutionChainDisplaySettings
@@ -127,7 +128,7 @@ entry.data.pokemonUpgrades
 #### TYPE CHART (STRENGTHS/WEAKENESSES)
 entry.templateId == POKEMON_TYPE_[TYPE_NAME]
 
-data.entry.typeEffective
+entry.data.typeEffective
 - typeEffective
   - attackScalar: [1.0,0.625,0.625,0.625,1.0,1.0,1.0,0.625,0.625,0.625,1.0,1.6,1.0,1.6,1.0,1.0,1.6,0.625]
     // attackScalar order: [Normal,Fighting,Flying,Poison,Ground,Rock,Bug,Ghost,Steel,Fire,Water,Grass,Electric,Psychic,Ice,Dragon,Dark,Fairy]
