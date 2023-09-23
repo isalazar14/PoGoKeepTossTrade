@@ -12,7 +12,7 @@ export class Pokemon {
   famId?: number
   fam?: string
   forms: Map<number, PokeForm>;
-  
+
   constructor() {
     this.forms = new Map<number, PokeForm>()
   }
@@ -59,7 +59,7 @@ export class PokeForm {
 
   // 3) types
   types?: [number, number?]
-  typeNames?: [ElementType,ElementType?]
+  typeNames?: [ElementType, ElementType?]
   // 4) candy / dust costs
   //   a) evolution (regular/shadow/purified)
   //   b) purfication
@@ -77,22 +77,22 @@ export class PokeForm {
 
 
 export type ElementType =
-"BUG"|
-"DARK"|
-"DRAGON"|
-"ELECTRIC"|
-"FAIRY"|
-"FIGHTING"|
-"FIRE"|
-"FLYING"|
-"GHOST"|
-"GRASS"|
-"GROUND"|
-"ICE"|
-"NORMAL"|
-"POISON"|
-"PSYCHIC"|
-"ROCK"|
-"STEEL"|
-"WATER"
+  "BUG" |
+  "DARK" |
+  "DRAGON" |
+  "ELECTRIC" |
+  "FAIRY" |
+  "FIGHTING" |
+  "FIRE" |
+  "FLYING" |
+  "GHOST" |
+  "GRASS" |
+  "GROUND" |
+  "ICE" |
+  "NORMAL" |
+  "POISON" |
+  "PSYCHIC" |
+  "ROCK" |
+  "STEEL" |
+  "WATER"
 
