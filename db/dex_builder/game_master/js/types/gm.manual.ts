@@ -97,12 +97,13 @@ export type TypeEffective = {
   ]
 }
 
-export type GameMasterBaseEntry = {
+export interface GameMasterBaseEntry {
   templateId: string;
   data: { templateId: string }
 }
 
-export type GameMasterEntry = GameMasterBaseEntry & {
+export type GameMasterEntry = 
+GameMasterBaseEntry & {
   data:
   { templateId: string, pokemonFamily: PokemonFamily }
   | { tepmlateId: string, formSettings: FormSettings }

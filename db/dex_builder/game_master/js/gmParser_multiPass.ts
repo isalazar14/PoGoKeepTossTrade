@@ -9,13 +9,14 @@
     idendity forms to ignore
     - costumes
     - "copy"
-    - if Normal is only form
+    - not string
+    - Normal
     - Unown
     - Spinda
     - Arceus
 
     types
-    - type
+    - type name
 
     level data
     - CPMs 
@@ -85,7 +86,7 @@
 
 // import { GameMaster } from "./types/gm.manual"
 import { GameMaster } from "./types/gm.quicktype"
-import { getFamilyName, getGameMasterTyped, getTypeName, isFamilyEntry, isFormEntry, isPokemonEntry, isTypeEntry } from "./utils"
+import { removeFamilyPrefix, getGameMasterTyped, getTypeName, isPokemonEntry, isTypeEntry, isUnwantedForm } from "./utils"
 
 const
   gameMasterFilePath = '../gameMaster_2023_09_19.json',
@@ -101,27 +102,29 @@ const
     leagues: {},
     consts: {},
   },
-  pokemonFormsToSkip = {} as { [key: string]: Set<string> | null },
+  pokemonFormsToSkip = {} as { [key: string]: Set<string | number> | null },
   gmPokemonEntryIdxs = [] as number[]
 
 
 
 function getBaseData(gm: GameMaster) {
-  gm.forEach((entry, idx) => {
-    if (isFamilyEntry(entry)) {
-      const family = getFamilyName(entry.data.pokemonFamily.familyId)
-      if (family) dexData.families.push(family)
+  gm.forEach(({ data }, idx) => {
+
+    if (data.pokemonFamily) {
+      dexData.families.push(removeFamilyPrefix(data.templateId)!)
     }
 
-    else if (isFormEntry(entry)) {
-      const { pokemon, forms } = entry.data.formSettings
+    else if (data.formSettings) {
+      const { pokemon, forms } = data.formSettings
       if (forms) {
         pokemonFormsToSkip[pokemon] = new Set()
 
         forms.forEach((f) => {
           const { form } = f
-          if (f.isCostume
-            || knownUnwantedForms.some(unwanted => form.includes(unwanted))) {
+          if (form &&
+            (f.isCostume
+              || typeof form != 'string'
+              || isUnwantedForm(form))) {
             pokemonFormsToSkip[pokemon]?.add(form)
           }
         })
@@ -131,14 +134,14 @@ function getBaseData(gm: GameMaster) {
       }
     }
 
-    else if (isTypeEntry(entry)) {
-      dexData.types.push(getTypeName(entry.templateId))
+    else if (data.typeEffective) {
+      dexData.types.push(getTypeName(data.templateId)!)
     }
 
-    else if (isPokemonEntry(entry)) {
-      const { pokemonId: pokemon, form } = entry.data.pokemonSettings
+    else if (data.pokemonSettings) {
+      const { pokemonId: pokemon, form } = data.pokemonSettings
       if (!form) {
-        dexData.pokemon.set(pokemon, entry.data.pokemonSettings)
+        dexData.pokemon.set(pokemon, data.pokemonSettings)
       }
       else {
         if (!pokemonFormsToSkip[pokemon]?.has(form)) {

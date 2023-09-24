@@ -1,0 +1,1 @@
+export const knownUnwantedForms = ["NORMAL", "COPY", "UNOWN", "SPINDA", "ARCEUS", "SILVALLY"]
