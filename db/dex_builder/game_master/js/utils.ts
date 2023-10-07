@@ -3,14 +3,13 @@ import { GameMasterBaseEntry, GameMasterEntry, PokemonFamily, PokemonSettings, T
 import { FormSettings } from "./types/gm.manual"
 import { Convert } from "./types/gm.quicktype";
 import { knownUnwantedForms } from "./unwantedForms";
-import { BaseObject } from "./types/utils";
+import { ObjectWithKeys } from "./types/utils";
 
 export function getGameMasterTyped(source: string) {
   const gmJson = readFileSync(source, 'utf-8')
   return Convert.toGameMasterEntry(gmJson)
 }
 
-export function objectsDifferAtPaths(obj1: BaseObject, obj2: BaseObject, paths: string[]): boolean {
   for (let path of paths) {
     let val1 = getNestedValue(obj1, path);
     let val2 = getNestedValue(obj2, path);
@@ -19,11 +18,12 @@ export function objectsDifferAtPaths(obj1: BaseObject, obj2: BaseObject, paths: 
     } else if (val1 !== val2) {
       return true;
     }
+export function objectsDifferAtPath(obj1: ObjectWithKeys, obj2: ObjectWithKeys, path: string): boolean {
   }
   return false;
 }
 
-function getNestedValue(obj: BaseObject | any[], path: string): any {
+function getNestedValue(obj: ObjectWithKeys | any[], path: string): any {
   const parts = path.split(/[\.\[\]]/).filter(Boolean);  // Split path on '.' and '[' and filter out empty parts and ']'
   return parts.reduce((acc: any, part: string) => {
     let index = isNaN(Number(part)) ? part : parseInt(part); // Convert array index to integer
@@ -43,7 +43,7 @@ function arraysDiffer(arr1: any[], arr2: any[]): boolean {
   return false;
 }
 
-function objectsDiffer(obj1: BaseObject, obj2: BaseObject): boolean {
+function objectsDiffer(obj1: ObjectWithKeys, obj2: ObjectWithKeys): boolean {
   for (let key in obj1) {
     if (typeof obj1[key] === 'object' && typeof obj2[key] === 'object') {
       if (Array.isArray(obj1[key]) && Array.isArray(obj2[key])) {

@@ -1,3 +1,3 @@
-export type BaseObject = {
-  [key: string]: any;
+export type ObjectWithKeys = {
+  [key: string | number]: any;
 };
