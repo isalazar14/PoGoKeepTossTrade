@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, Suspense, lazy } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
@@ -6,7 +6,9 @@ import { Routes, Route, BrowserRouter } from 'react-router-dom'
 // import CSVDragDrop from './components/CSVDragDrop'
 import CSVResults from './components/CSVResults'
 import CSVDragDropUpload from './components/CSVDragDropUpload'
+// import DuckDbPage from './pages/DuckDbPage'
 
+const DuckDbPage = lazy(() => import('./pages/DuckDbPage'))
 
 export default function App() {
   return (
@@ -23,6 +25,11 @@ export default function App() {
           />}
         />
         <Route path={"results"} element={<CSVResults />} />
+        <Route path={"duck"} element={
+          <Suspense fallback={<div>Loading DuckDB page...</div>}>
+            <DuckDbPage />
+          </Suspense>
+        } />
       </Routes>
     </BrowserRouter>
   )
