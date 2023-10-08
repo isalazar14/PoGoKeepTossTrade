@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Family {
+  id Int @id @map("family_id")
+  name String @map("family_name")
+}
+
+model Form {
+  id Int @id @map("f_id")
+  name String @map("form_name")
+}
+
+model Friendship {
+  id Int @id @map("friendship_id")
+  level String @map("friendship_level")
+  ivFloor Int @map("iv_floor")
+}
+
+model Iv {
+  id Int @id @map("iv_id")
+  atk Int @map("atk_iv")
+  def Int @map("def_iv")
+  sta Int @map("sta_iv")
+  ivStr Int @map("iv_str")
+  floor Int @map("iv_floor")
+}
+
+
+model League {
+  id String @id @map("league_id")
+  name String @map("league_name")
+  maxCP Int @map("max_cp")
+}
+
+model Level {
+  level Float @id
+  cpm Float
+  
+}
